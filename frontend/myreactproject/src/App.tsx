@@ -1,28 +1,15 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
+import React from "react";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import AppRoutes from "./router";
 
-function App() {
-  const [message, setMessage] = useState('')
+const clientId = "493735588229-7tn4qrs22e404m7te2gffriqpthdav2r.apps.googleusercontent.com";
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get('http://localhost:8000/api/test/')
-        setMessage(response.data.message)
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      }
-    }
-
-    fetchData()
-  }, [])
-
+const App: React.FC = () => {
   return (
-    <div>
-      <h1>Тестування API</h1>
-      <p>{message}</p>
-    </div>
+    <GoogleOAuthProvider clientId={clientId}>
+      <AppRoutes />
+    </GoogleOAuthProvider>
   );
-}
+};
 
-export default App
+export default App;

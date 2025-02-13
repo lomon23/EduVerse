@@ -1,9 +1,13 @@
 from django.urls import path
-from . import views
-
-app_name = 'myapp'
+from .views import create_collection, MyDataView, RegisterView, LoginView, GoogleLoginView
 
 urlpatterns = [
-    path('', views.home, name='home'),
-    path('test/', views.api_test, name='api-test'),
+    # Робота з MongoDB
+    path('create_collection/', create_collection, name='create_collection'),
+    path('data/', MyDataView.as_view(), name='my_data'),
+
+    # Аутентифікація
+    path('register/', RegisterView.as_view(), name='register'),
+    path('login/', LoginView.as_view(), name='login'),
+    path('google-login/', GoogleLoginView.as_view(), name='google_login'),
 ]
