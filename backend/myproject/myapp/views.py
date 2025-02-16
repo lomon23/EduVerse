@@ -1,5 +1,4 @@
 from django.shortcuts import render
-from utils import get_db_handle
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth.hashers import make_password, check_password
@@ -9,10 +8,21 @@ from django.views import View
 from pymongo import MongoClient
 import jwt
 import datetime
+import json
 from django.conf import settings
 from social_django.utils import psa
+from rest_framework import status
+from django.contrib.auth import authenticate
+import requests
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from .utils import get_db_handle
 
-def create_collection(request):
+
+def create_collection():
     db_name = 'dyplom'
     db_handle, client = get_db_handle(db_name)
     if db_handle:
@@ -31,7 +41,7 @@ class MyDataView(APIView):
             return str(data)
         else:
             return data
-    def get(self, request):
+    def get(self,):
         try:
             db_handle, client = get_db_handle('dyplom')
              
@@ -48,21 +58,21 @@ class MyDataView(APIView):
     def post(self, request):
         serializer = MyDataSerializer(data=request.data)
         if serializer.is_valid():
-            db_handle, client = get_db_handle('dyplom')
+            db_handle, = get_db_handle('dyplom')
             collection = db_handle['dyplom']
             collection.insert_one(serializer.validated_data)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-from rest_framework.permissions import IsAuthenticated
 
 
 
-class RegisterView(APIView):#все працює
+
+class RegisterView(APIView):  
     permission_classes = [AllowAny]
-
+    @csrf_exempt  # Не забувайте використовувати декоратор
     def post(self, request):
-        db_handle, client = get_db_handle('dyplom')
-        collection = db_handle['users']
+        db_handle = get_db_handle('dyplom')  # Повертає базу даних
+        collection = db_handle['users']  # Отримуємо колекцію users
 
         email = request.data.get('email')
         password = request.data.get('password')
@@ -78,49 +88,110 @@ class RegisterView(APIView):#все працює
 
         collection.insert_one(user_data)
         return Response({'message': 'User registered successfully'}, status=201)
+    
+    
+    
 class LoginView(APIView):
+    permission_classes = [AllowAny]
+    @csrf_exempt 
     def post(self, request):
+        db_handle = get_db_handle('dyplom')
+        collection = db_handle['users']
+
         email = request.data.get("email")
         password = request.data.get("password")
-
-        # Підключення до MongoDB
-        client = MongoClient("mongodb://localhost:27017/")
-        db = client["mydatabase"]
-        users_collection = db["users"]
-
-        # Шукаємо користувача в базі
-        user = users_collection.find_one({"email": email})
-
+        if not email or not password:
+            return Response({"error": "Email and password required"}, status=status.HTTP_400_BAD_REQUEST)
+        # Знайти користувача в базі даних
+        user = collection.find_one({"email": email})
         if not user:
-            return Response({"error": "Користувача не знайдено!"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "User not found"}, status=status.HTTP_401_UNAUTHORIZED)
 
-        # Отримуємо хешований пароль з бази
-        stored_hashed_password = user.get("password")
-
-        # Перевіряємо пароль
-        if check_password(password, stored_hashed_password):
-            return Response({"message": "Успішний вхід!"}, status=status.HTTP_200_OK)
+        if check_password(password, user["password"]):
+            return Response({"message": "Login successful"}, status=status.HTTP_200_OK)
         else:
-            return Response({"error": "Невірний пароль!"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "Invalid password"}, status=status.HTTP_401_UNAUTHORIZED)
 
-class GoogleLoginView(APIView):
-    permission_classes = [AllowAny]
+from django.views import View
+from django.http import JsonResponse
+from django.middleware.csrf import get_token
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
+import json
+import requests
+from .utils import get_db_handle  # Підключення до MongoDB
 
-    @psa('social:complete')
+@method_decorator(csrf_protect, name='dispatch')  # Додаємо CSRF-захист
+class GoogleRegisterView(View):
     def post(self, request):
-        token = request.data.get("access_token")
+        data = json.loads(request.body)
+        token = data.get('token')
+
         if not token:
-            return Response({'error': 'Token is required'}, status=400)
+            return JsonResponse({'error': 'Token is required'}, status=400)
 
-        user = request.backend.do_auth(token)
+        # Перевірка Google-токена
+        google_url = f"https://www.googleapis.com/oauth2/v1/userinfo?access_token={token}"
+        google_response = requests.get(google_url)
 
-        if user:
-            db_handle, client = get_db_handle('dyplom')
-            collection = db_handle['users']
-            user_data = {"email": user.email, "name": user.get_full_name()}
+        if google_response.status_code != 200:
+            return JsonResponse({'error': 'Invalid Google token'}, status=400)
 
-            if not collection.find_one({"email": user.email}):
-                collection.insert_one(user_data)
+        user_info = google_response.json()
+        email = user_info.get('email')
+        name = user_info.get('name')
 
-            return Response({'message': 'Google login successful'}, status=200)
-        return Response({'error': 'Invalid token'}, status=400)
+        db_handle = get_db_handle('dyplom')
+        collection = db_handle['users']
+
+        # Перевіряємо, чи є користувач
+        existing_user = collection.find_one({'email': email})
+
+        if existing_user:
+            return JsonResponse({'message': 'User already exists', 'email': email, 'name': name})
+
+        # Зберігаємо нового користувача разом із токеном
+        collection.insert_one({'email': email, 'name': name, 'token': token})
+
+        return JsonResponse({'message': 'User registered successfully', 'email': email, 'name': name})
+
+
+
+class GetCSRFToken(View):
+    def get(self, request):
+        return JsonResponse({'csrfToken': get_token(request)})
+
+
+@method_decorator(csrf_protect, name='dispatch')  # Додаємо CSRF-захист
+class GoogleLoginView(View):
+    def post(self, request):
+        data = json.loads(request.body)
+        token = data.get('token')
+
+        if not token:
+            return JsonResponse({'error': 'Token is required'}, status=400)
+
+        # Перевірка Google-токена
+        google_url = f"https://www.googleapis.com/oauth2/v1/userinfo?access_token={token}"
+        google_response = requests.get(google_url)
+
+        if google_response.status_code != 200:
+            return JsonResponse({'error': 'Invalid Google token'}, status=400)
+
+        user_info = google_response.json()
+        email = user_info.get('email')
+        name = user_info.get('name')
+
+        db_handle = get_db_handle('dyplom')
+        collection = db_handle['users']
+
+        # Перевіряємо, чи є користувач
+        existing_user = collection.find_one({'email': email})
+
+        if existing_user:
+            # Якщо користувач існує — логінемо його
+            return JsonResponse({'message': 'User logged in successfully', 'email': email, 'name': name})
+
+        # Якщо користувача немає — повертаємо помилку
+        return JsonResponse({'error': 'User not found. Please register first.'}, status=400)
+

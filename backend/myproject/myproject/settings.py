@@ -25,9 +25,11 @@ SECRET_KEY = 'django-insecure-idpmn9p$5t5#su422kn($^iq1wcm!0zvre$0x4v+!-eb9+7j@j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '493735588229-7tn4qrs22e404m7te2gffriqpthdav2r.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
 # Application definition
 
 INSTALLED_APPS = [
@@ -37,11 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'myapp',
     'rest_framework',
     'corsheaders',
     'social_django',
-    'django.contrib.sites',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -57,6 +59,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',  # додайте це
+    'corsheaders.middleware.CorsMiddleware',
+    
+    
 ]
 
 ROOT_URLCONF = 'myproject.urls'
@@ -139,19 +144,35 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  
-    "http://localhost:3000",  
+    "http://localhost:5173",  # Додай свій фронтенд
 ]
 
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = True 
+CORS_ALLOW_HEADERS = [
+    'authorization',
+    'content-type',
+    'X-CSRFToken',
+]
 
-AUTHENTICATION_BACKENDS = (
-    'allauth.account.auth_backends.AuthenticationBackend',
+CORS_ALLOW_ALL_ORIGINS = False
+
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",  # Додай свій фронтенд
+]
+
+
+
+
+UTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 )
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '493735588229-7tn4qrs22e404m7te2gffriqpthdav2r.apps.googleusercontent.com'
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
+
 LOGIN_REDIRECT_URL = '/'
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email']  # доступ до email
 SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = ['first_name', 'last_name']
@@ -167,3 +188,4 @@ SOCIALACCOUNT_PROVIDERS = {
         'AUTH_PARAMS': {'access_type': 'online'},
     }
 }
+SITE_ID = 1
