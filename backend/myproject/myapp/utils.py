@@ -1,8 +1,12 @@
-import pymongo
+import os
 from pymongo import MongoClient
+from dotenv import load_dotenv
 
-# Налаштування підключення до MongoDB
-def get_db_handle(db_name):
-    client = MongoClient('mongodb://localhost:27017/')  # Підключення до локального MongoDB
-    db_handle = client[db_name]  # Використовуємо базу даних з вказаним ім'ям
-    return db_handle
+load_dotenv()  # Завантажує змінні з .env
+
+def get_db_handle():
+    mongo_url = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+    db_name = os.getenv("MONGO_DB_NAME", "dyplom")
+
+    client = MongoClient(mongo_url)
+    return client[db_name]  # Повертає базу даних

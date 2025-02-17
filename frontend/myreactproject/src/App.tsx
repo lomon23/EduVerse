@@ -2,7 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import MainPage from './pages/mainPage/mainPage';
 import GoogleRegister from './pages/auth/Register';
-import Login from './pages/auth/login'
+import GoogleLogin from './pages/auth/login'
 import Account from './pages/account/account'
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
@@ -14,7 +14,7 @@ const App: React.FC = () => {
                 <Routes>
                     <Route path="/" element={<MainPage />} />
                     <Route path="/register" element={<GoogleRegister />} />
-                    <Route path="/login" element={<Login />} />
+                    <Route path="/login" element={<GoogleLogin />} />
                     <Route path='/account' element={<Account/>}/>  
                 </Routes>
             </Router>

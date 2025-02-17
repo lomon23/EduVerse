@@ -7,6 +7,9 @@ import registerUser from '../../services/auth/notRegister'; // Нативна р
 const GoogleRegister: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [dateOfBirth, setDateOfBirth] = useState('');
     const [message, setMessage] = useState<string | null>(null);
     const [csrfToken, setCsrfToken] = useState('');
     const navigate = useNavigate();
@@ -51,8 +54,12 @@ const GoogleRegister: React.FC = () => {
     // Нативна реєстрація
     const handleRegister = async () => {
         try {
-            const data = await registerUser(email, password);
+            const data = await registerUser(email, password, firstName, lastName, dateOfBirth);
             console.log('User registered:', data);
+            localStorage.setItem('userEmail', email);
+            localStorage.setItem('firstName', firstName);
+            localStorage.setItem('lastName', lastName);
+            localStorage.setItem('dateOfBirth', dateOfBirth);
             navigate('/login');
         } catch (error) {
             setMessage("Помилка реєстрації");
@@ -80,6 +87,24 @@ const GoogleRegister: React.FC = () => {
                 placeholder="Введіть пароль"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+            />
+            <input
+                type="text"
+                placeholder="Введіть ім'я"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+            />
+            <input
+                type="text"
+                placeholder="Введіть прізвище"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+            />
+            <input
+                type="date"
+                placeholder="Дата народження"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
             />
             <button onClick={handleRegister}>Реєстрація</button>
         </div>

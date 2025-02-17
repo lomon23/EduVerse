@@ -1,10 +1,8 @@
 from django.urls import path
-from .views import create_collection, MyDataView, RegisterView, LoginView,  GoogleRegisterView, GetCSRFToken,GoogleLoginView
+from .views import   RegisterView, LoginView,  GoogleRegisterView, GetCSRFToken, GoogleLoginView
 
 urlpatterns = [
-    # Робота з MongoDB
-    path('create_collection/', create_collection, name='create_collection'),
-    path('data/', MyDataView.as_view(), name='my_data'),
+
 
     # Аутентифікація
     path('register/', RegisterView.as_view(), name='register'),
