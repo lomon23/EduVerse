@@ -1,11 +1,38 @@
-import React from 'react';
-import './stylesMP/sideBar.css';
+import React, { useState } from "react";
+import './stylesMP/SideBar.css';
 
-const SideBar: React.FC = () => {
+interface SidebarProps {
+    onSelect: (page: string) => void;
+    isOpen: boolean;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ onSelect, isOpen }) => {
+    const [activePage, setActivePage] = useState('home');
+
+    const handleClick = (page: string) => {
+        setActivePage(page);
+        onSelect(page);
+    };
+
     return (
-        <p>sidebar</p>
-        
+        <div className={`sidebar ${isOpen ? 'open' : ''}`}>
+            <h2 className="sidebar-title">Меню</h2>
+            <nav className="sidebar-nav">
+                <button
+                    className={`sidebar-button ${activePage === 'home' ? 'active' : ''}`}
+                    onClick={() => handleClick('home')}
+                >
+                    🏠 Головна
+                </button>
+                <button
+                    className={`sidebar-button ${activePage === 'courses' ? 'active' : ''}`}
+                    onClick={() => handleClick('courses')}
+                >
+                    📚 Курси
+                </button>
+            </nav>
+        </div>
     );
 };
 
-export default SideBar;
+export default Sidebar;

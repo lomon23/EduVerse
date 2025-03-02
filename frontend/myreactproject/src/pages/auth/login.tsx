@@ -24,7 +24,10 @@ const GoogleLogin: React.FC = () => {
             try {
                 const res = await axios.post(
                     "http://localhost:8000/api/google-login/",  // API для логінації через Google
-                    { token: response.access_token },
+                    { 
+                        token: response.access_token,
+                        redirect_uri: window.location.origin // Add this line
+                    },
                     {
                         withCredentials: true,
                         headers: {
@@ -40,12 +43,15 @@ const GoogleLogin: React.FC = () => {
                     navigate('/');
                 }
             } catch (error: any) {
+                console.error('Google login error:', error);
                 setMessage(error.response?.data?.error || "Помилка логіну через Google");
             }
         },
-        onError: () => {
+        onError: (error) => {
+            console.error('Google login error:', error);
             setMessage("Помилка входу через Google");
-        }
+        },
+        flow: 'implicit' // Add this line
     });
 
     // Логін через email

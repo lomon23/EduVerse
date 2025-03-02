@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+
+.level-card {
+    width: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.progress-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.progress-ring {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.progress-ring circle {
+    fill: none;
+    stroke-width: 8;
+    stroke-linecap: round;
+}
+
+.progress-bg {
+    stroke: #f0f0f0;
+}
+
+.progress-bar {
+    stroke: #4CAF50;
+    stroke-dasharray: 339.292; /* 2 * π * 54 */
+    transition: stroke-dashoffset 1s ease-in-out;
+}
+
+.level {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 28px;
+    font-weight: 500;
+    color: #333;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stat-box {
+    background: #f8f9fa;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+    text-align: center;
+    min-width: 140px;
+    transition: transform 0.2s ease;
+}
+
+.stat-box:hover {
+    transform: translateX(5px);
+    background: #f0f0f0;
+}
