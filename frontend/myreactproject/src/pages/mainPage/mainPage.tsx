@@ -1,22 +1,56 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "./Header";
-import Footer from "./Footer";
+
 import Sidebar from "./sideBar";
-import CourseList from "../../components/mainPage/CourseList";
+import CourseList from "../../components/course/CourseList"; // Update path
+import { fetchCourses } from "../../services/course/courseService"; // Update path
 import "./stylesMP/mainPage.css";
 
-const MainPage: React.FC = () => {
-    const [activePage, setActivePage] = useState<string>("home");
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Changed to true for default open state
+interface Course {
+    _id: string;
+    title: string;
+    description: string;
+    author_email: string;
+    created_at: string;
+}
+
+interface MainPageProps {
+    activePage?: string;
+}
+
+const MainPage: React.FC<MainPageProps> = ({ activePage: initialActivePage = "home" }) => {
+    const [activePage, setActivePage] = useState<string>(initialActivePage);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (activePage === "courses") {
+            setLoading(true);
+            const loadCourses = async () => {
+                try {
+                    const fetchedCourses = await fetchCourses();
+                    setCourses(fetchedCourses);
+                    setError(null);
+                } catch (err) {
+                    setError(err instanceof Error ? err.message : "Не вдалося отримати курси");
+                    setCourses([]);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            loadCourses();
+        }
+    }, [activePage]);
 
     const handlePageSelect = (page: string) => {
         setActivePage(page);
-        console.log('Selected page:', page);
     };
 
     const toggleSidebar = () => {
         setIsSidebarOpen(prev => !prev);
-        console.log('Sidebar state:', !isSidebarOpen);
     };
 
     return (
@@ -29,17 +63,24 @@ const MainPage: React.FC = () => {
                 />
                 <main className="main-content">
                     {activePage === "courses" ? (
-                        <CourseList />
+                        loading ? (
+                            <div className="loading">Завантаження курсів...</div>
+                        ) : error ? (
+                            <div className="error">{error}</div>
+                        ) : (
+                            <CourseList courses={courses} />
+                        )
                     ) : (
                         <div className="welcome-content">
-                            <h2>Welcome to the Main Page</h2>
-                            <p>This is the main content area.</p>
+                            <h2>Ласкаво просимо</h2>
+                            <p>Оберіть розділ у меню зліва</p>
                         </div>
                     )}
                 </main>
             </div>
-            <Footer />
+
         </div>
     );
 };
+
 export default MainPage;

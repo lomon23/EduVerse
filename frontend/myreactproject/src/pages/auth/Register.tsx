@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import registerUser from '../../services/auth/notRegister'; // Нативна реєстрація
+import registerUser from '../../services/auth/notRegister';
+import './StylesAuth/register.css';
 
 const GoogleRegister: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -67,46 +68,91 @@ const GoogleRegister: React.FC = () => {
     };
 
     return (
-        <div>
-            <h2>Реєстрація</h2>
+        <div className="auth-page container">
+            <div className="formBox">
+                <h2 className="title">Create Account</h2>
 
-            {message && <p>{message}</p>}
+                {message && <p className="message">{message}</p>}
 
-            {/* Google */}
-            <button onClick={() => googleLogin()}>Зареєструватися через Google</button>
+                <div className="inputGroup">
+                    <input
+                        className="input"
+                        type="email"
+                        id="email"
+                        placeholder=" "
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                    <label className="label" htmlFor="email">Email</label>
+                </div>
 
-            <h3>Або через email</h3>
-            <input
-                type="email"
-                placeholder="Введіть email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            />
-            <input
-                type="password"
-                placeholder="Введіть пароль"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-            />
-            <input
-                type="text"
-                placeholder="Введіть ім'я"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-            />
-            <input
-                type="text"
-                placeholder="Введіть прізвище"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-            />
-            <input
-                type="date"
-                placeholder="Дата народження"
-                value={dateOfBirth}
-                onChange={(e) => setDateOfBirth(e.target.value)}
-            />
-            <button onClick={handleRegister}>Реєстрація</button>
+                <div className="inputGroup">
+                    <input
+                        className="input"
+                        type="password"
+                        id="password"
+                        placeholder=" "
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                    <label className="label" htmlFor="password">Password</label>
+                </div>
+
+                <div className="inputGroup">
+                    <input
+                        className="input"
+                        type="text"
+                        id="first-name"
+                        placeholder=" "
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                    />
+                    <label className="label" htmlFor="first-name">First Name</label>
+                </div>
+
+                <div className="inputGroup">
+                    <input
+                        className="input"
+                        type="text"
+                        id="last-name"
+                        placeholder=" "
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                    />
+                    <label className="label" htmlFor="last-name">Last Name</label>
+                </div>
+
+                <div className="inputGroup">
+                    <input
+                        className="input"
+                        type="date"
+                        id="birth-date"
+                        placeholder=" "
+                        value={dateOfBirth}
+                        onChange={(e) => setDateOfBirth(e.target.value)}
+                        required
+                    />
+                    <label className="label" htmlFor="birth-date">Date of Birth</label>
+                </div>
+
+                <button className="button" onClick={handleRegister}>
+                    Create Account
+                </button>
+
+                <div className="divider">or</div>
+
+                <button className="button google-btn" onClick={() => googleLogin()}>
+                    Sign up with Google
+                </button>
+
+                <p className="login-text">
+                    Already have an account? <a href="/login">Login</a>
+                </p>
+            </div>
         </div>
     );
 };

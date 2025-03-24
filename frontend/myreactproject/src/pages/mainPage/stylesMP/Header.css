@@ -1,11 +1,22 @@
+:root {
+    --background-color: #121212;
+    --container-bg: #333;
+    --text-color: #eee;
+    --highlight-color: #c7a008;
+    --button-bg: #b5831a;
+    --button-hover: #a57318;
+    --header-shadow: rgba(0, 0, 0, 0.3);
+}
+
 .header {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    background-color: #ffffff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: var(--container-bg);
+    box-shadow: 0 2px 8px var(--header-shadow);
     z-index: 4000;
+    padding: 15px 0;
 }
 
 .header-content {
@@ -15,6 +26,8 @@
     height: 100%;
     padding: 0 20px;
     width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .left-section {
@@ -37,17 +50,27 @@
     display: block;
     width: 20px;
     height: 2px;
-    background-color: #333;
+    background-color: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+.menu-toggle:hover span {
+    background-color: var(--highlight-color);
 }
 
 .logo {
-    font-size: 20px;
-    font-weight: bold;
+    font-size: 24px;
+    font-weight: 500;
 }
 
 .logo a {
-    color: #333;
+    color: var(--text-color);
     text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.logo a:hover {
+    color: var(--highlight-color);
 }
 
 .left-nav {
@@ -66,29 +89,37 @@
 }
 
 .nav-link {
-    color: #333;
+    color: var(--text-color);
     text-decoration: none;
     font-size: 16px;
-    padding: 5px 10px;
-    transition: color 0.3s ease;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-weight: 300;
 }
 
 .nav-link:hover {
-    color: #007bff;
+    background-color: rgba(199, 160, 8, 0.1);
+    color: var(--highlight-color);
 }
 
 .logout-btn {
-    background-color: #007bff;
-    color: white;
+    background-color: var(--button-bg);
+    color: var(--text-color);
     border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
+    padding: 8px 20px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
+    font-weight: 300;
+    font-size: 16px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .logout-btn:hover {
-    background-color: #0056b3;
+    background-color: var(--button-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 @media (max-width: 768px) {
@@ -102,6 +133,15 @@
     
     .nav-link {
         font-size: 14px;
-        padding: 5px;
+        padding: 6px 12px;
+    }
+    
+    .logout-btn {
+        padding: 6px 16px;
+        font-size: 14px;
+    }
+    
+    .logo {
+        font-size: 20px;
     }
 }

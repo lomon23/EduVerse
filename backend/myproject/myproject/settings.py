@@ -60,7 +60,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',  # додайте це
-    'corsheaders.middleware.CorsMiddleware',    
+  
+
 ]
 
 ROOT_URLCONF = 'myproject.urls'
@@ -158,7 +159,9 @@ CORS_ALLOW_HEADERS = [
     'authorization',
     'content-type',
     'X-CSRFToken',
+    'email',
 ]
+
 
 CORS_ALLOW_ALL_ORIGINS = True  # For development only
 

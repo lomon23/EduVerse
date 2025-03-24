@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useGoogleLogin } from '@react-oauth/google';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import loginUser from '../../services/auth/notLogin'; // Нативна функція для логінації
+import loginUser from '../../services/auth/notLogin';
+import './StylesAuth/login.css';
 
 const GoogleLogin: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -67,28 +68,52 @@ const GoogleLogin: React.FC = () => {
     };
 
     return (
-        <div>
-            <h2>Логін</h2>
+        <div className="auth-page container">
+            <div className="formBox">
+                <h2 className="title">Welcome Back</h2>
 
-            {message && <p>{message}</p>}
+                {message && <p className="message">{message}</p>}
 
-            {/* Google Login Button */}
-            <button onClick={() => googleLogin()}>Увійти через Google</button>
+                <div className="inputGroup">
+                    <input
+                        className="input"
+                        type="email"
+                        id="email"
+                        placeholder=" "
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                    <label className="label" htmlFor="email">Email</label>
+                </div>
 
-            <h3>Або через email</h3>
-            <input
-                type="email"
-                placeholder="Введіть email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            />
-            <input
-                type="password"
-                placeholder="Введіть пароль"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-            />
-            <button onClick={handleLogin}>Логін</button>
+                <div className="inputGroup">
+                    <input
+                        className="input"
+                        type="password"
+                        id="password"
+                        placeholder=" "
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                    <label className="label" htmlFor="password">Password</label>
+                </div>
+
+                <button className="button" onClick={handleLogin}>
+                    Sign In
+                </button>
+
+                <div className="divider">or</div>
+
+                <button className="button google-btn" onClick={() => googleLogin()}>
+                    Sign in with Google
+                </button>
+
+                <p className="login-text">
+                    Don't have an account? <Link to="/register">Sign Up</Link>
+                </p>
+            </div>
         </div>
     );
 };
