@@ -5,6 +5,8 @@ import {
     uploadAvatar, 
     AccountDetails 
 } from '../../services/account/accountService';
+import CourseList from '../../components/course/CourseList';
+import { fetchCourses } from '../../services/course/courseService';
 import './styleAccount/account.css';
 
 const Account: React.FC = () => {
@@ -14,6 +16,9 @@ const Account: React.FC = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editedDetails, setEditedDetails] = useState<AccountDetails | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [courses, setCourses] = useState([]);
+    const [coursesLoading, setCoursesLoading] = useState(true);
+    const [coursesError, setCoursesError] = useState<string | null>(null);
 
     useEffect(() => {
         const loadAccountDetails = async () => {
@@ -30,6 +35,22 @@ const Account: React.FC = () => {
         loadAccountDetails();
     }, []);
 
+    useEffect(() => {
+        const loadCourses = async () => {
+            try {
+                const data = await fetchCourses();
+                console.log('Завантажені курси:', data);
+                setCourses(data);
+            } catch (err) {
+                setCoursesError(err instanceof Error ? err.message : 'Помилка завантаження курсів');
+            } finally {
+                setCoursesLoading(false);
+            }
+        };
+
+        loadCourses();
+    }, []);
+
     const handleEdit = () => {
         setIsEditing(true);
         setEditedDetails(accountDetails);
@@ -40,7 +61,9 @@ const Account: React.FC = () => {
         setEditedDetails(null);
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => {
         if (!editedDetails) return;
         
         setEditedDetails({
@@ -57,17 +80,16 @@ const Account: React.FC = () => {
                 firstName: editedDetails.firstName,
                 lastName: editedDetails.lastName,
                 dateOfBirth: editedDetails.dateOfBirth,
-                description: editedDetails.description // Add this line
+                description: editedDetails.description
             });
 
-            // Refresh account details after successful update
             const updatedDetails = await fetchAccountDetails();
             setAccountDetails(updatedDetails);
             setIsEditing(false);
             setError('');
         } catch (error) {
             console.error('Error updating profile:', error);
-            setError(error instanceof Error ? error.message : 'Error updating profile');
+            setError(error instanceof Error ? error.message : 'Помилка оновлення профілю');
         }
     };
 
@@ -96,134 +118,145 @@ const Account: React.FC = () => {
         });
     };
 
-    if (loading) return <div>Завантаження...</div>;
-    if (error) return <div>Помилка: {error}</div>;
-    if (!accountDetails) return <div>Дані не знайдено</div>;
+    if (loading) return <div className="loading">Завантаження...</div>;
+    if (error) return <div className="error">{error}</div>;
+    if (!accountDetails) return <div className="error">Дані не знайдено</div>;
 
     return (
-        <div className={`account-container ${isEditing ? 'edit-mode' : 'view-mode'}`}>
-            <div className="account-header">
-                <h2>Профіль користувача</h2>
-                {!isEditing && (
-                    <button className="edit-button" onClick={handleEdit}>
-                        Редагувати
-                    </button>
-                )}
-            </div>
-            
-            <div className="account-details">
-                <div className="avatar-section">
-                    <img 
-                        src={accountDetails?.avatar || '/default-avatar.png'} 
-                        alt="Profile avatar" 
-                        className="profile-avatar"
-                    />
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleAvatarUpload}
-                        accept="image/*"
-                        style={{ display: 'none' }}
-                    />
-                    <button 
-                        className="upload-avatar-btn"
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        Змінити фото
-                    </button>
-                </div>
-                <div className="detail-item">
-                    <label>Email:</label>
-                    <span>{accountDetails.email}</span>
-                </div>
-                <div className="detail-item">
-                    <label>Ім'я:</label>
-                    {isEditing ? (
+        <div className="account-container">
+            {/* Ліва колонка */}
+            <div className="account-sidebar">
+                <div className="profile-basic-info">
+                    <div className="avatar-section">
+                        <img 
+                            src={accountDetails?.avatar || '/default-avatar.png'} 
+                            alt="Profile avatar" 
+                            className="profile-avatar"
+                        />
                         <input
-                            type="text"
-                            name="firstName"
-                            value={editedDetails?.firstName || ''}
-                            onChange={handleInputChange}
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleAvatarUpload}
+                            accept="image/*"
+                            style={{ display: 'none' }}
                         />
-                    ) : (
-                        <span>{accountDetails.firstName || 'Не вказано'}</span>
-                    )}
-                </div>
-
-                <div className="detail-item">
-                    <label>Прізвище:</label>
-                    {isEditing ? (
-                        <input
-                            type="text"
-                            name="lastName"
-                            value={editedDetails?.lastName || ''}
-                            onChange={handleInputChange}
-                        />
-                    ) : (
-                        <span>{accountDetails.lastName || 'Не вказано'}</span>
-                    )}
-                </div>
-
-                <div className="detail-item">
-                    <label>XP:</label>
-                    <span>{accountDetails.xp}</span>
-                </div>
-                <div className="detail-item">
-                    <label>Дата народження:</label>
-                    {isEditing ? (
-                        <input
-                            type="date"
-                            name="dateOfBirth"
-                            value={editedDetails?.dateOfBirth || ''}
-                            onChange={handleInputChange}
-                        />
-                    ) : (
-                        <span>{accountDetails.dateOfBirth || 'Не вказано'}</span>
-                    )}
-                </div>
-                <div className="detail-item">
-                    <label>Завершені курси:</label>
-                    {accountDetails.completed_courses.length > 0 ? (
-                        <ul>
-                            {accountDetails.completed_courses.map((course, index) => (
-                                <li key={index}>{course}</li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <span>Немає завершених курсів</span>
-                    )}
-                </div>
-
-                <div className="detail-item description-item">
-                    <label>Про себе:</label>
-                    {isEditing ? (
-                        <textarea
-                            name="description"
-                            value={editedDetails?.description || ''}
-                            onChange={(e) => setEditedDetails(prev => prev ? {
-                                ...prev,
-                                description: e.target.value
-                            } : null)}
-                            placeholder="Розкажіть щось про себе..."
-                            maxLength={500}
-                        />
-                    ) : (
-                        <p className="description-text">
-                            {accountDetails.description || 'Опис відсутній'}
-                        </p>
-                    )}
-                </div>
-
-                {isEditing && (
-                    <div className="save-cancel-buttons">
-                        <button className="save-button" onClick={handleSave}>
-                            Зберегти
-                        </button>
-                        <button className="cancel-button" onClick={handleCancel}>
-                            Скасувати
+                        <button 
+                            className="upload-avatar-btn"
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            Змінити фото
                         </button>
                     </div>
-                )}
+                    
+                    <div className="profile-info-section">
+                        {/* Existing fields */}
+                        <div className="info-item">
+                            <label>Email:</label>
+                            <span>{accountDetails.email}</span>
+                        </div>
+                        <div className="info-item">
+                            <label>Ім'я:</label>
+                            {isEditing ? (
+                                <input
+                                    type="text"
+                                    name="firstName"
+                                    value={editedDetails?.firstName || ''}
+                                    onChange={handleInputChange}
+                                    placeholder="Введіть ім'я"
+                                />
+                            ) : (
+                                <span>{accountDetails.firstName || 'Не вказано'}</span>
+                            )}
+                        </div>
+                        <div className="info-item">
+                            <label>Прізвище:</label>
+                            {isEditing ? (
+                                <input
+                                    type="text"
+                                    name="lastName"
+                                    value={editedDetails?.lastName || ''}
+                                    onChange={handleInputChange}
+                                    placeholder="Введіть прізвище"
+                                />
+                            ) : (
+                                <span>{accountDetails.lastName || 'Не вказано'}</span>
+                            )}
+                        </div>
+                        {/* New fields */}
+                        <div className="info-item">
+                            <label>Дата народження:</label>
+                            {isEditing ? (
+                                <input
+                                    type="date"
+                                    name="dateOfBirth"
+                                    value={editedDetails?.dateOfBirth || ''}
+                                    onChange={handleInputChange}
+                                />
+                            ) : (
+                                <span>{accountDetails.dateOfBirth ? new Date(accountDetails.dateOfBirth).toLocaleDateString('uk-UA') : 'Не вказано'}</span>
+                            )}
+                        </div>
+                        <div className="info-item">
+                            <label>Про себе:</label>
+                            {isEditing ? (
+                                <textarea
+                                    name="description"
+                                    value={editedDetails?.description || ''}
+                                    onChange={handleInputChange}
+                                    placeholder="Розкажіть про себе"
+                                />
+                            ) : (
+                                <span>{accountDetails.description || 'Не вказано'}</span>
+                            )}
+                        </div>
+                        {/* Edit buttons */}
+                        <div className="profile-actions">
+                            {isEditing ? (
+                                <>
+                                    <button className="save-button" onClick={handleSave}>Зберегти</button>
+                                    <button className="cancel-button" onClick={handleCancel}>Скасувати</button>
+                                </>
+                            ) : (
+                                <button className="upload-avatar-btn" onClick={handleEdit}>Редагувати профіль</button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Права секція */}
+            <div className="account-main">
+                {/* Верхня панель статистики */}
+                <div className="stats-panel">
+                    <div className="stat-card">
+                        <h3>Рівень</h3>
+                        <div className="stat-value">{Math.floor(accountDetails.xp / 100)}</div>
+                    </div>
+                    <div className="stat-card">
+                        <h3>XP</h3>
+                        <div className="stat-value">{accountDetails.xp}</div>
+                    </div>
+                    <div className="stat-card">
+                        <h3>Курсів завершено</h3>
+                        <div className="stat-value">
+                            {accountDetails.completed_courses?.length || 0}
+                        </div>
+                    </div>
+                </div>
+
+
+
+                {/* Courses section */}
+                <div className="courses-section">
+                    <h1>Список курсів</h1>
+                    {coursesLoading ? (
+                        <div className="loading">Завантаження курсів...</div>
+                    ) : coursesError ? (
+                        <div className="error">{coursesError}</div>
+                    ) : (
+                        <CourseList courses={courses} />
+                    )}
+                </div>
             </div>
         </div>
     );

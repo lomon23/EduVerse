@@ -201,3 +201,22 @@ export const completeCourse = async (courseId: string, completionPercentage: str
         throw error;
     }
 };
+
+
+
+
+
+export interface CourseDetails {
+    id: string;
+    name: string;
+    description: string;
+    completion_date?: string;
+    xp_reward: number;
+    status?: 'completed' | 'in_progress';
+    items?: Array<{
+        id: string;
+        name: string;
+        type: string;
+        completion_date?: string;
+    }>;
+}

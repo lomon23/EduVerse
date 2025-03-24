@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import './/style/courseList.css';
+
+import './style/courseList.css';
 
 interface Course {
     _id: string;
@@ -14,6 +15,7 @@ interface CourseListProps {
     courses: Course[];
 }
 
+
 const CourseList: React.FC<CourseListProps> = ({ courses }) => {
     const navigate = useNavigate();
     const userEmail = localStorage.getItem('userEmail');
@@ -26,6 +28,22 @@ const CourseList: React.FC<CourseListProps> = ({ courses }) => {
     const handleStudyCourse = (courseId: string) => {
         navigate(`/courses/${courseId}/`);
     };
+
+    if (!courses) {
+        return (
+            <div className="course-list empty">
+                <p>Помилка завантаження курсів</p>
+            </div>
+        );
+    }
+
+    if (courses.length === 0) {
+        return (
+            <div className="course-list empty">
+                <p>У вас поки що немає завершених курсів</p>
+            </div>
+        );
+    }
 
     return (
         <div className="course-list">

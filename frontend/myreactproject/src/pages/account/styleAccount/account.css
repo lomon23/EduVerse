@@ -1,172 +1,289 @@
+:root {
+    --background-color: #121212;
+    --container-bg: #333;
+    --card-bg: #424242;
+    --text-color: #eee;
+    --text-secondary: #bbb;
+    --highlight-color: #c7a008;
+    --button-bg: #b5831a;
+    --button-shadow: rgba(0, 0, 0, 0.3);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+/* Global styles */
+* {
+    font-family: var(--font-primary);
+}
+
 .account-container {
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 20px;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 1.5rem; /* Зменшено з 2rem */
+    padding: 1.5rem; /* Зменшено з 2rem */
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: 90vh; /* Зменшена висота */
+    background-color: var(--background-color);
+    color: var(--text-color);
 }
 
-.account-details {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* Ліва колонка */
+.account-sidebar {
+    background: var(--container-bg);
+    border-radius: 16px; /* Зменшено з 26px */
+    padding: 1.5rem; /* Зменшено з 2rem */
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.4);
+    min-height: 500px; /* Зменшена фіксована висота */
 }
 
-.detail-item {
-    margin-bottom: 15px;
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-}
-
-.detail-item:last-child {
-    border-bottom: none;
-}
-
-.detail-item label {
-    display: inline-block;
-    width: 150px;
-    font-weight: bold;
-    color: #666;
-}
-
-.detail-item span {
-    color: #333;
-}
-
-.detail-item ul {
-    margin: 10px 0;
-    padding-left: 170px;
-}
-
-.detail-item li {
-    margin: 5px 0;
+.profile-basic-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* Зменшено з 2rem */
 }
 
 .avatar-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 20px;
+    text-align: center;
 }
 
 .profile-avatar {
-    width: 150px;
-    height: 150px;
+    width: 150px; /* Зменшено */
+    height: 150px; /* Зменшено */
     border-radius: 50%;
     object-fit: cover;
-    margin-bottom: 10px;
+    margin-bottom: 0.75rem; /* Зменшено з 1rem */
+    border: 3px solid var(--highlight-color);
 }
 
 .upload-avatar-btn {
-    padding: 8px 16px;
-    background-color: #4a90e2;
-    color: white;
+    padding: 10px; /* Зменшено з 12px */
+    background: var(--button-bg);
     border: none;
-    border-radius: 4px;
+    border-radius: 12px; /* Зменшено з 20px */
+    color: var(--text-color);
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    box-shadow: 0px 4px 8px var(--button-shadow);
+    font-size: 14px;
+    width: 80%;
+    height: 36px; /* Фіксована висота */
 }
 
 .upload-avatar-btn:hover {
-    background-color: #357abd;
+    background: var(--highlight-color);
+    transform: translateY(-2px);
 }
 
+.profile-info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; /* Зменшено з 1.5rem */
+    padding: 1rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 40px; /* Фіксована висота */
+}
+
+.info-item label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.info-item span {
+    font-size: 1rem;
+}
+
+.info-item input,
+.info-item textarea {
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.info-item textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.edit-button,
+.save-button,
+.cancel-button {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
+}
 
 .edit-button {
-    padding: 8px 16px;
-    background-color: #4CAF50;
+    background: var(--highlight-color);
     color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-left: auto;
-    display: block;
-    transition: background-color 0.3s;
-}
-
-.edit-button:hover {
-    background-color: #45a049;
-}
-
-.detail-item input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.detail-item input:focus {
-    border-color: #4a90e2;
-    outline: none;
-    box-shadow: 0 0 3px rgba(74, 144, 226, 0.3);
-}
-
-.save-cancel-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 20px;
 }
 
 .save-button {
-    padding: 8px 16px;
-    background-color: #4CAF50;
+    background: var(--success-color, #4CAF50);
     color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
 }
 
 .cancel-button {
-    padding: 8px 16px;
-    background-color: #f44336;
+    background: var(--error-color, #f44336);
     color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
 }
 
-.save-button:hover {
-    background-color: #45a049;
-}
-
+.edit-button:hover,
+.save-button:hover,
 .cancel-button:hover {
-    background-color: #da190b;
+    opacity: 0.9;
 }
 
-.edit-mode .detail-item span {
-    display: none;
+/* Права секція */
+.account-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* Зменшено з 2rem */
 }
 
-.view-mode .detail-item input {
-    display: none;
+/* Панель статистики */
+.stats-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem; /* Зменшено з 1.5rem */
 }
 
-.description-item {
-    margin: 20px 0;
+.stat-card {
+    background: var(--container-bg);
+    padding: 1.25rem; /* Зменшено з 1.5rem */
+    border-radius: 16px; /* Зменшено з 26px */
+    text-align: center;
+    box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+    height: 120px; /* Зменшена висота */
 }
 
-.description-item textarea {
-    width: 100%;
-    min-height: 100px;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    resize: vertical;
-    font-family: inherit;
+.stat-card:hover {
+    transform: translateY(-5px);
 }
 
-.description-item textarea:focus {
-    outline: none;
-    border-color: #4a90e2;
-    box-shadow: 0 0 3px rgba(74, 144, 226, 0.3);
+.stat-card h3 {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem; /* Зменшено з 1rem */
+    font-size: 0.9rem;
 }
 
-.description-text {
-    color: #666;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    margin: 0;
-    padding: 8px 0;
+.stat-value {
+    font-size: 2rem; /* Зменшено */
+    font-weight: bold;
+    color: var(--highlight-color);
+}
+
+/* Секція курсів */
+.courses-section {
+    background: var(--container-bg);
+    padding: 1.5rem; /* Зменшено з 2rem */
+    border-radius: 16px; /* Зменшено з 26px */
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Додаємо заголовок для списку курсів */
+.courses-section h1 {
+    color: var(--text-color);
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    letter-spacing: -0.5px;
+}
+
+.courses-section h2 {
+    color: var(--text-color);
+    margin-bottom: 1rem; /* Зменшено з 1.5rem */
+    font-size: 1.5rem;
+}
+
+.courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem; /* Зменшено з 1.5rem */
+}
+
+.course-card {
+    background: var(--card-bg);
+    padding: 1.25rem; /* Зменшено з 1.5rem */
+    border-radius: 12px; /* Зменшено з 20px */
+    box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+    height: auto;
+    min-height: 100px; /* Мінімальна висота */
+}
+
+.course-card:hover {
+    transform: translateY(-3px);
+}
+
+.course-card h3 {
+    color: var(--text-color);
+    margin-bottom: 0.4rem; /* Зменшено з 0.5rem */
+    font-size: 1.1rem;
+}
+
+.course-card p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.no-courses {
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 1.5rem; /* Зменшено з 2rem */
+    font-size: 1.1rem;
+}
+
+/* Courses section styles */
+.courses-section .loading,
+.courses-section .error {
+    font-size: 1.2rem;
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.courses-section .error {
+    color: var(--error-color);
+}
+
+/* Адаптивний дизайн */
+@media (max-width: 768px) {
+    .account-container {
+        grid-template-columns: 1fr;
+    }
+
+    .account-sidebar {
+        margin-bottom: 1.5rem; /* Зменшено з 2rem */
+    }
+}
+
+@media (max-width: 480px) {
+    .account-container {
+        padding: 0.75rem; /* Зменшено з 1rem */
+    }
+
+    .stats-panel {
+        grid-template-columns: 1fr;
+    }
 }
