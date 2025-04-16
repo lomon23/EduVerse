@@ -1,0 +1,222 @@
+:root {
+    --background-color: #121212;
+    --container-bg: #333;
+    --input-border: #777;
+    --text-color: #eee;
+    --label-color: #bbb;
+    --highlight-color: #c7a008;
+    --button-bg: #b5831a;
+    --button-shadow: rgba(0, 0, 0, 0.8);
+    --button-hover-bg: #a57318;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 200;
+}
+
+/* Переконаємося, що форма займає весь екран */
+.container {
+    min-height: 100vh;
+    min-width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.formBox {
+    background: var(--container-bg);
+    padding: 25px;
+    border-radius: 26px;
+    width: 100%;
+    max-width: 340px;
+    text-align: center;
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.4);
+}
+
+.title {
+    color: var(--text-color);
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 20px;
+}
+
+.subtitle {
+    color: var(--text-color);
+    text-align: center;
+    margin: 20px 0;
+    font-size: 20px;
+}
+
+.inputGroup {
+    position: relative;
+    margin-bottom: 18px;
+}
+
+.input {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 2px solid var(--input-border);
+    border-radius: 14px;
+    color: var(--text-color);
+    outline: none;
+    font-size: 13px;
+    transition: all 0.3s ease;
+}
+
+.input:focus {
+    border-color: var(--highlight-color);
+    outline: none;
+}
+
+.input::placeholder {
+    color: transparent;
+}
+
+.label {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    color: var(--label-color);
+    font-size: 11px;
+    transition: 0.3s ease;
+    padding: 0 5px;
+    background: var(--container-bg);
+    pointer-events: none;
+}
+
+.input:focus ~ .label,
+.input:not(:placeholder-shown) ~ .label {
+    top: 0;
+    left: 10px;
+    font-size: 9px;
+    color: var(--highlight-color);
+}
+
+.input[type="date"] {
+    color: var(--text-color);
+}
+
+/* Фікс для автозаповнення */
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px var(--container-bg) inset !important;
+    -webkit-text-fill-color: var(--text-color) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+.button {
+    width: 100%;
+    padding: 12px;
+    background: var(--button-bg);
+    border: none;
+    border-radius: 20px;
+    font-size: 15px;
+    color: #f0f0f0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0px 4px 8px var(--button-shadow);
+    margin-bottom: 15px;
+}
+
+.button:hover {
+    background: var(--button-hover-bg);
+    transform: translateY(-3px);
+    box-shadow: 0px 6px 10px var(--button-shadow);
+}
+
+.google-btn {
+    background: #4285f4;
+}
+
+.google-btn:hover {
+    background: #357abd;
+}
+
+.divider {
+    color: var(--text-color);
+    margin: 15px 0;
+    position: relative;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 45%;
+    height: 1px;
+    background-color: var(--input-border);
+}
+
+.divider::before {
+    left: 0;
+}
+
+.divider::after {
+    right: 0;
+}
+
+.login-text {
+    margin-top: 12px;
+    color: #aaa;
+    font-size: 11px;
+}
+
+.login-text a {
+    color: var(--highlight-color);
+    text-decoration: none;
+}
+
+.message {
+    color: var(--text-color);
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.auth-page {
+    z-index: 1000;
+    background-color: var(--background-color);
+}
+
+.auth-page .formBox {
+    z-index: 1001;
+}
+
+@media (max-width: 480px) {
+    .formBox {
+        max-width: 100%;
+        margin: 10px;
+        padding: 20px;
+    }
+    
+    .input {
+        font-size: 16px; /* Prevents zoom on mobile */
+    }
+}
+
+@media (max-height: 600px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .formBox {
+        padding: 15px;
+    }
+    
+    .inputGroup {
+        margin-bottom: 12px;
+    }
+}

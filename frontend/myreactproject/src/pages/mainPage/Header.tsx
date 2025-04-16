@@ -41,6 +41,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                         {isLoggedIn ? (
                             <>
                                 <Link to="/create_course" className="nav-link">Create Course</Link>
+                                <Link to="/CreateRoom" className="nav-link"> Create room</Link>
                                 <Link to="/account" className="nav-link">Account</Link>
                                 <button onClick={handleLogout} className="logout-btn">Logout</button>
                             </>

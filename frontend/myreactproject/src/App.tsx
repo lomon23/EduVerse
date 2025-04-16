@@ -8,6 +8,10 @@ import CreateCourse from "./pages/course/Courses";
 import CourseDetail from "./pages/course/CourseDetail";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import Layout from './pages/mainPage/Layout';
+import CreateRoom from "./pages/socket_room/CreateRoom";  
+import Room from './pages/socket_room/Room';
+import ChatRoom from './pages/socket_room/ChatRoom';
+import BoardRoom from './pages/socket_room/BoardRoom';
 
 const App: React.FC = () => {
     return (
@@ -23,6 +27,10 @@ const App: React.FC = () => {
                     <Route path="/create_course" element={<Layout><CreateCourse /></Layout>} />
                     <Route path="/courses" element={<Layout><MainPage activePage="courses" /></Layout>} />
                     <Route path="/courses/:id/*" element={<Layout><CourseDetail /></Layout>} />
+                    <Route path="/CreateRoom" element={<Layout><CreateRoom /></Layout>} />
+                    <Route path="/Room" element={<Layout><Room /></Layout>} />
+                    <Route path="/chat" element={<Layout><ChatRoom /></Layout>} />
+                    <Route path="/board" element={<Layout><BoardRoom /></Layout>} />
                 </Routes>
             </Router>
         </GoogleOAuthProvider>

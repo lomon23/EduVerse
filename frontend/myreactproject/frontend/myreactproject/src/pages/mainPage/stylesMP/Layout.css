@@ -1,0 +1,15 @@
+.layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex: 1;
+    padding: 80px 20px 20px;
+    transition: margin-left 0.3s ease;
+    margin-left: 0;
+}
+
+.main-content.shifted {
+    margin-left: 250px;
+}
