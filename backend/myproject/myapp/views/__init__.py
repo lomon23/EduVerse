@@ -6,3 +6,4 @@ from .CreateCourseItem import create_course_item, get_course_items
 from .account import get_account_details
 from .courses import update_course
 from .createCourse import update_course_progress, complete_course
+from .rooms import create_room, join_room  # Add this line

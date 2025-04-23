@@ -6,7 +6,12 @@ from .views import get_account_details
 from .views import update_course
 from .views import courses
 from .views import complete_course
+from .views import create_room, join_room
 
+from django.urls import path
+from .views import create_room, join_room
+
+# Add these to your urlpatterns
 urlpatterns = [
     # Аутентифікація
     path('register/', RegisterView.as_view(), name='register'),
@@ -30,4 +35,6 @@ urlpatterns = [
 
     # акаунт 
     path('account/details/', get_account_details, name='account_details'),
+    path('rooms/create/', create_room, name='create_room'),
+    path('rooms/join/', join_room, name='join_room'),
 ]
