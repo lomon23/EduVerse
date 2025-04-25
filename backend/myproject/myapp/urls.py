@@ -6,10 +6,15 @@ from .views import get_account_details
 from .views import update_course
 from .views import courses
 from .views import complete_course
-from .views import create_room, join_room
-
-from django.urls import path
-from .views import create_room, join_room
+from .views.rooms import (
+    create_room,
+    join_room,
+    join_course,
+    remove_user_from_room,
+    delete_room,
+    get_user_rooms,
+    get_room_details  # Import the new endpoint
+)
 
 # Add these to your urlpatterns
 urlpatterns = [
@@ -37,4 +42,9 @@ urlpatterns = [
     path('account/details/', get_account_details, name='account_details'),
     path('rooms/create/', create_room, name='create_room'),
     path('rooms/join/', join_room, name='join_room'),
+    path('courses/join/', join_course, name='join_course'),
+    path('rooms/remove-user/', remove_user_from_room, name='remove_user_from_room'),
+    path('rooms/delete/', delete_room, name='delete_room'),
+    path('rooms/', get_user_rooms, name='get_user_rooms'),  # Add the new endpoint
+    path('rooms/<str:room_id>/', get_room_details, name='get_room_details'),  # Add the new endpoint
 ]

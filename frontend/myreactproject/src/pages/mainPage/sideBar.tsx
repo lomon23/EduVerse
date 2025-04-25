@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import './stylesMP/SideBar.css';
-    import { Modal, Box, TextField, Checkbox, FormControlLabel, Button } from '@mui/material';
+import { Modal, Box, TextField, Checkbox, FormControlLabel, Button } from '@mui/material';
+import { createRoom, joinRoom } from '../../services/room/room_api'; // Import the API functions
+import axios from 'axios';
 
 interface SidebarProps {
     onSelect: (page: string) => void;
@@ -26,24 +28,101 @@ const Sidebar: React.FC<SidebarProps> = ({ onSelect, isOpen }) => {
     const [joinRoomOpen, setJoinRoomOpen] = useState(false);
     const [roomName, setRoomName] = useState('');
     const [isPrivate, setIsPrivate] = useState(false);
-    const [roomCode, setRoomCode] = useState('');
+    const [inviteCode, setInviteCode] = useState('');
+    const [error, setError] = useState('');
+    const [createdRooms, setCreatedRooms] = useState([]);
+    const [joinedRooms, setJoinedRooms] = useState([]);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchRooms = async () => {
+            const email = localStorage.getItem('userEmail'); // Retrieve email from localStorage
+            if (!email) {
+                setError('Електронна пошта не знайдена. Увійдіть у систему.');
+                return;
+            }
+
+            try {
+                const response = await axios.get('http://localhost:8000/api/rooms/', {
+                    headers: { Email: email }
+                });
+                setCreatedRooms(response.data.createdRooms);
+                setJoinedRooms(response.data.joinedRooms);
+            } catch (err: any) {
+                console.error('Failed to fetch rooms:', err);
+            }
+        };
+
+        fetchRooms();
+    }, []);
 
     const handleClick = (page: string) => {
         setActivePage(page);
         onSelect(page);
     };
 
-    const handleCreateRoom = () => {
-        // Handle room creation logic here
-        console.log('Creating room:', { roomName, isPrivate });
-        setCreateRoomOpen(false);
+    const handleCreateRoom = async () => {
+        try {
+            if (!roomName) {
+                setError('Назва кімнати є обов\'язковою');
+                return;
+            }
+
+            const email = localStorage.getItem('userEmail'); // Retrieve email from localStorage
+            if (!email) {
+                setError('Електронна пошта не знайдена. Увійдіть у систему.');
+                return;
+            }
+
+            const roomData = {
+                name: roomName,
+                isPrivate,
+            };
+
+            const response = await createRoom(roomData, email);
+            console.log('Room created:', response);
+
+            // Reset form and close modal
+            setRoomName('');
+            setIsPrivate(false);
+            setError('');
+            setCreateRoomOpen(false);
+
+            // Optionally navigate to the created room
+            navigate(`/room/${response._id}`);
+        } catch (err: any) {
+            setError(err.message || 'Не вдалося створити кімнату');
+        }
     };
 
-    const handleJoinRoom = () => {
-        // Handle room joining logic here
-        console.log('Joining room with code:', roomCode);
-        setJoinRoomOpen(false);
+    const handleJoinRoom = async () => {
+        try {
+            if (!inviteCode) {
+                setError('Код кімнати є обов\'язковим');
+                return;
+            }
+
+            const email = localStorage.getItem('userEmail'); // Retrieve email from localStorage
+            if (!email) {
+                setError('Електронна пошта не знайдена. Увійдіть у систему.');
+                return;
+            }
+
+            const roomData = { inviteCode };
+
+            const response = await joinRoom(roomData, email);
+            console.log('Joined room:', response);
+
+            // Reset form and close modal
+            setInviteCode('');
+            setError('');
+            setJoinRoomOpen(false);
+
+            // Navigate to the joined room
+            navigate(`/room/${response.roomId}`);
+        } catch (err: any) {
+            setError(err.message || 'Не вдалося приєднатися до кімнати');
+        }
     };
 
     return (
@@ -84,6 +163,30 @@ const Sidebar: React.FC<SidebarProps> = ({ onSelect, isOpen }) => {
                     >
                         🔗 Приєднатися до кімнати
                     </button>
+
+                    {/* Display Created Rooms */}
+                    <h3 className="sidebar-subtitle">Мої кімнати</h3>
+                    {createdRooms.map((room: any) => (
+                        <button
+                            key={room._id}
+                            className="sidebar-button"
+                            onClick={() => navigate(`/room/${room._id}`)}
+                        >
+                            {room.name}
+                        </button>
+                    ))}
+
+                    {/* Display Joined Rooms */}
+                    <h3 className="sidebar-subtitle">Кімнати, до яких я приєднався</h3>
+                    {joinedRooms.map((room: any) => (
+                        <button
+                            key={room._id}
+                            className="sidebar-button"
+                            onClick={() => navigate(`/room/${room._id}`)}
+                        >
+                            {room.name}
+                        </button>
+                    ))}
                 </nav>
             </div>
 
@@ -94,6 +197,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onSelect, isOpen }) => {
             >
                 <Box sx={modalStyle}>
                     <h2>Створити нову кімнату</h2>
+                    {error && <p style={{ color: 'red' }}>{error}</p>}
                     <TextField
                         fullWidth
                         label="Назва кімнати"
@@ -128,11 +232,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onSelect, isOpen }) => {
             >
                 <Box sx={modalStyle}>
                     <h2>Приєднатися до кімнати</h2>
+                    {error && <p style={{ color: 'red' }}>{error}</p>}
                     <TextField
                         fullWidth
                         label="Код кімнати"
-                        value={roomCode}
-                        onChange={(e) => setRoomCode(e.target.value)}
+                        value={inviteCode}
+                        onChange={(e) => setInviteCode(e.target.value)}
                         margin="normal"
                     />
                     <Button

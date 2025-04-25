@@ -97,7 +97,7 @@ const ChatRoom: React.FC = () => {
             <Box sx={{ display: 'flex', gap: 1 }}>
               <TextField
                 fullWidth
-                placeholder="Введіть повідомлення..."
+                placeholder="Введіть повідомлення...піздванхуй"
                 variant="outlined"
                 size="small"
                 value={message}
