@@ -2,6 +2,13 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000/api'; // Replace with your backend URL
 
+export interface RoomMember {
+    email: string;
+    role: string;
+    joinedAt: string;
+}
+
+
 // Create a room
 export const createRoom = async (data: {
     name: string;
@@ -68,3 +75,21 @@ export const deleteRoom = async (data: { roomId: string }) => {
         throw new Error(error.response?.data?.error || 'Failed to delete room');
     }
 };
+
+export const fetchRoomMembers = async (roomId: string): Promise<RoomMember[]> => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/rooms/${roomId}/members/`, {
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        if (!response.ok) {
+            throw new Error('Failed to fetch room members');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching room members:', error);
+        throw error;
+    }
+};
+

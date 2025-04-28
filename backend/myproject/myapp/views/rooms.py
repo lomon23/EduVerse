@@ -182,16 +182,22 @@ def remove_user_from_room(request):
     try:
         db = get_db_handle()
         rooms_collection = db['rooms']
-        
-        # Get data from request
         room_id = request.data.get('roomId')
         user_id = request.data.get('userId')
         user_email = request.data.get('email')
+        requester_email = request.headers.get('Email')
 
         if not room_id or (not user_id and not user_email):
             return Response({
                 'error': 'Room ID and either user ID or email are required'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if requester is the owner of the room
+        room = rooms_collection.find_one({'_id': ObjectId(room_id)})
+        if not room:
+            return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
+        if room.get('ownerEmail') != requester_email:
+            return Response({'error': 'Only the room owner can remove users'}, status=status.HTTP_403_FORBIDDEN)
 
         # Build the query to remove the user
         query = {'_id': ObjectId(room_id)}
@@ -305,3 +311,44 @@ def get_room_details(request, room_id):
         return Response({
             'error': f'Failed to fetch room details: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_user_details(request, room_id, email):
+    try:
+        db = get_db_handle()
+        rooms_collection = db['rooms']
+        room = rooms_collection.find_one({'_id': ObjectId(room_id)})
+        if not room:
+            return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
+        member = next((m for m in room.get('members', []) if m['email'] == email), None)
+        if not member:
+            return Response({'error': 'Member not found'}, status=status.HTTP_404_NOT_FOUND)
+        # Перетворюємо joinedAt у строку, якщо це datetime
+        if hasattr(member['joinedAt'], 'isoformat'):
+            member['joinedAt'] = member['joinedAt'].isoformat()
+        return Response({
+            'email': member['email'],
+            'role': member['role'],
+            'joinedAt': member['joinedAt']
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Exception occurred in get_room_member: {str(e)}", exc_info=True)
+        return Response({'error': f'Failed to fetch member: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_room_members(request, room_id):
+    try:
+        db = get_db_handle()
+        rooms_collection = db['rooms']
+        room = rooms_collection.find_one({'_id': ObjectId(room_id)})
+        if not room:
+            return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
+        members = room.get('members', [])
+        for m in members:
+            if hasattr(m['joinedAt'], 'isoformat'):
+                m['joinedAt'] = m['joinedAt'].isoformat()
+        return Response(members, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Exception in get_room_members: {str(e)}", exc_info=True)
+        return Response({'error': f'Failed to fetch members: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

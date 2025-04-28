@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Paper, Typography, Container, Grid, Tabs, Tab } from '@mui/material';
+import { Box, Paper, Typography, Container, Grid, Tabs, Tab, List, ListItem, ListItemText, IconButton } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import ChatRoom from './ChatRoom'; // Import the ChatRoom component
+import { fetchRoomMembers, removeUserFromRoom, RoomMember } from '../../services/room/room_api';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const Room: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>(); // Get roomId from URL params
@@ -11,11 +13,14 @@ const Room: React.FC = () => {
         createdAt: string;
         ownerEmail: string;
     } | null>(null);
+    const [members, setMembers] = useState<RoomMember[]>([]); // State for members info
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState(0); // State for active tab
 
+    const currentUserEmail = localStorage.getItem('userEmail');
+
     useEffect(() => {
-        const fetchRoomDetails = async () => {
+        const fetchData = async () => {
             try {
                 const email = localStorage.getItem('userEmail'); // Retrieve email from localStorage
                 if (!email) {
@@ -23,21 +28,42 @@ const Room: React.FC = () => {
                     return;
                 }
 
-                const response = await axios.get(`http://localhost:8000/api/rooms/${roomId}/`, {
+                const roomResponse = await axios.get(`http://localhost:8000/api/rooms/${roomId}/`, {
                     headers: { Email: email },
                 });
 
-                setRoomDetails(response.data);
+                setRoomDetails(roomResponse.data);
             } catch (err: any) {
-                setError(err.response?.data?.error || 'Не вдалося завантажити дані кімнати');
+                setError(err.response?.data?.error || 'Не вдалося завантажити дані');
             }
         };
 
-        fetchRoomDetails();
+        fetchData();
+    }, [roomId]);
+
+    useEffect(() => {
+        const fetchMembers = async () => {
+            if (!roomId) return;
+            try {
+                const data = await fetchRoomMembers(roomId);
+                setMembers(data);
+            } catch (e) {}
+        };
+        fetchMembers();
     }, [roomId]);
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setActiveTab(newValue);
+    };
+
+    const handleRemoveMember = async (email: string) => {
+        if (!roomId) return;
+        try {
+            await removeUserFromRoom({ roomId, email });
+            setMembers((prevMembers) => prevMembers.filter((member) => member.email !== email));
+        } catch (err) {
+            console.error('Failed to remove member:', err);
+        }
     };
 
     if (error) {
@@ -85,6 +111,29 @@ const Room: React.FC = () => {
                                 <Typography variant="h4" sx={{ mb: 2 }}>
                                     {roomDetails.name}
                                 </Typography>
+                                <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+                                    Список учасників кімнати:
+                                </Typography>
+                                <List sx={{ mb: 2 }}>
+                                    {members.map((member, idx) => (
+                                        <ListItem
+                                            key={member.email + idx}
+                                            divider
+                                            secondaryAction={
+                                                roomDetails.ownerEmail === currentUserEmail && (
+                                                    <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveMember(member.email)}>
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                )
+                                            }
+                                        >
+                                            <ListItemText
+                                                primary={member.email}
+                                                secondary={`Роль: ${member.role} | Приєднався: ${new Date(member.joinedAt).toLocaleString()}`}
+                                            />
+                                        </ListItem>
+                                    ))}
+                                </List>
                                 <Typography variant="body1" sx={{ mb: 1 }}>
                                     <strong>Дата створення:</strong> {new Date(roomDetails.createdAt).toLocaleString()}
                                 </Typography>

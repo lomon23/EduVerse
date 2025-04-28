@@ -20,6 +20,12 @@ export interface AccountDetails {
     courses: Course[]; // Add this line to include user's created courses
 }
 
+export interface RoomMember {
+    email: string;
+    role: string;
+    joinedAt: string;
+}
+
 export const fetchAccountDetails = async (): Promise<AccountDetails> => {
     const email = localStorage.getItem('userEmail');
     if (!email) {

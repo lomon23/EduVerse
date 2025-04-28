@@ -1,141 +1,130 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Paper, Typography, Container, Grid, List, ListItem, ListItemText, TextField, Button } from '@mui/material';
 import io, { Socket } from 'socket.io-client';
+import { fetchAccountDetails } from '../../services/account/accountService';
+import { saveMessage, getMessages } from '../../services/room/chat_room';
 
-const ChatRoom: React.FC = () => {
+interface Message {
+  text: string;
+  timestamp: string;
+}
+
+const ChatRoom: React.FC<{ roomId: string }> = ({ roomId }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<{user: string, text: string}[]>([]);
-  const [users, setUsers] = useState<{id: string, username: string}[]>([]);
-  const [username, setUsername] = useState('User_' + Math.floor(Math.random() * 1000));
-  const [room, setRoom] = useState('chat');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [nickname, setNickname] = useState('');
+  const [accountDetails, setAccountDetails] = useState<any>(null);
 
   useEffect(() => {
-    // Connect to socket server - make sure your Express server is running
-    try {
-      const newSocket = io('http://localhost:5000', {
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
-        timeout: 10000
-      });
+    const initializeChat = async () => {
+      try {
+        const details = await fetchAccountDetails();
+        setAccountDetails(details);
+        setNickname(`${details.firstName} ${details.lastName}`);
+
+        // Load existing messages
+        const existingMessages = await getMessages(roomId);
+        const formattedMessages = existingMessages.map((msg: any) => ({
+          text: `${msg.senderName}: ${msg.content}`,
+          timestamp: new Date(msg.timestamp).toLocaleTimeString('en-GB')
+        }));
+        setMessages(formattedMessages);
+
+        const newSocket = io('http://localhost:5000');
+        setSocket(newSocket);
+
+        newSocket.emit('joinRoom', `${details.firstName} ${details.lastName}`, roomId);
+
+        newSocket.on('message', (msg: Message) => {
+          setMessages(prev => [...prev, msg]);
+        });
+
+        return () => {
+          newSocket.off('message');
+          newSocket.disconnect();
+        };
+      } catch (error) {
+        console.error('Failed to initialize chat:', error);
+      }
+    };
+
+    initializeChat();
+  }, [roomId]);
+
+  const sendMessage = async () => {
+    if (message && socket && accountDetails) {
+      const timestamp = new Date().toLocaleTimeString('en-GB');
       
-      setSocket(newSocket);
+      try {
+        // Save message to database
+        await saveMessage({
+          chatId: roomId,
+          senderEmail: accountDetails.email,
+          senderName: nickname,
+          content: message,
+          type: 'text'
+        });
 
-      // Set up event listeners
-      newSocket.on('connect', () => {
-        setIsConnected(true);
-        console.log('Connected to server');
-        
-        // Join room after connection
-        newSocket.emit('joinRoom', username, room);
-      });
-
-      newSocket.on('connect_error', (error) => {
-        console.error('Connection error:', error);
-        setIsConnected(false);
-      });
-
-      newSocket.on('disconnect', () => {
-        setIsConnected(false);
-        console.log('Disconnected from server');
-      });
-
-      newSocket.on('message', (message) => {
-        setMessages(prev => [...prev, message]);
-      });
-
-      newSocket.on('roomUsers', ({ users }) => {
-        setUsers(users);
-      });
-
-      // Cleanup on unmount
-      return () => {
-        newSocket.disconnect();
-      };
-    } catch (error) {
-      console.error('Socket initialization error:', error);
+        // Send message through socket
+        socket.emit('sendMessage', { text: message, timestamp });
+        setMessage('');
+      } catch (error) {
+        console.error('Failed to send message:', error);
+      }
     }
-  }, [username, room]);
+  };
 
-  const sendMessage = () => {
-    if (message && socket) {
-      socket.emit('sendMessage', message);
-      setMessage('');
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      sendMessage();
     }
   };
 
   return (
-    <Container maxWidth="lg">
-      <Typography variant="h4" gutterBottom align="center">
-        Чат кімната
-      </Typography>
-      
-      <Grid container spacing={3} sx={{ mt: 2 }}>
-        <Grid sx={{ gridColumn: 'span 8' }}>
-          <Paper elevation={3} sx={{ p: 2, height: '70vh', display: 'flex', flexDirection: 'column' }}>
-            {/* Connection Status */}
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              Статус: {isConnected ? '🟢 Підключено' : '🔴 Відключено'}
-            </Typography>
-            
-            {/* Chat Messages Area */}
-            <Box sx={{ flexGrow: 1, overflow: 'auto', mb: 2, p: 2 }}>
-              {messages.map((msg, index) => (
-                <Typography key={index} variant="body1" sx={{ mb: 1 }}>
-                  <strong>{msg.user}:</strong> {msg.text}
-                </Typography>
-              ))}
-              {!isConnected && (
-                <Typography color="error">
-                  Не підключено до сервера. Переконайтеся, що ваш Express сервер запущений на порту 5000.
-                </Typography>
-              )}
-            </Box>
-
-            {/* Message Input */}
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <TextField
-                fullWidth
-                placeholder="Введіть повідомлення...піздванхуй"
-                variant="outlined"
-                size="small"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                disabled={!isConnected}
-              />
-              <Button 
-                variant="contained" 
-                onClick={sendMessage}
-                disabled={!isConnected}
-              >
-                Надіслати
-              </Button>
-            </Box>
-          </Paper>
-        </Grid>
-
-        <Grid sx={{ gridColumn: 'span 4' }}>
-          <Paper elevation={3} sx={{ p: 2, height: '70vh' }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>Учасники</Typography>
-            <List>
-              {users.length > 0 ? (
-                users.map((user) => (
-                  <ListItem key={user.id}>
-                    <ListItemText primary={user.username} />
-                  </ListItem>
-                ))
-              ) : (
-                <ListItem>
-                  <ListItemText primary="Немає підключених користувачів" />
-                </ListItem>
-              )}
-            </List>
-          </Paper>
-        </Grid>
-      </Grid>
-    </Container>
+    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ 
+        border: '1px solid #ccc', 
+        padding: '10px', 
+        height: '300px', 
+        overflowY: 'scroll', 
+        marginBottom: '10px',
+        backgroundColor: '#f5f5f5'
+      }}>
+        {messages.map((msg, index) => (
+          <div key={index} style={{ marginBottom: '5px' }}>
+            <span style={{ fontWeight: 'bold' }}>{msg.timestamp}:</span> {msg.text}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <input
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyPress={handleKeyPress}
+          style={{ 
+            flex: 1,
+            padding: '10px',
+            borderRadius: '4px',
+            border: '1px solid #ccc'
+          }}
+          placeholder="Type your message..."
+        />
+        <button 
+          onClick={sendMessage}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#1976d2',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Send
+        </button>
+      </div>
+    </div>
   );
 };
 
