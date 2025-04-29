@@ -8,6 +8,14 @@ export interface RoomMember {
     joinedAt: string;
 }
 
+export interface RoomDetails {
+    name: string;
+    createdAt: string;
+    ownerEmail: string;
+    inviteCode: string;
+    isPrivate: boolean;
+    avatar?: string; // додано поле для аватарки
+}
 
 // Create a room
 export const createRoom = async (data: {
@@ -53,13 +61,19 @@ export const joinCourse = async (data: {
 };
 
 // Remove a user from a room
-export const removeUserFromRoom = async (data: {
-    roomId: string;
-    userId?: string;
-    email?: string;
-}) => {
+export const removeUserFromRoom = async (
+    data: {
+        roomId: string;
+        userId?: string;
+        email?: string;
+    },
+    ownerEmail: string // додайте цей параметр
+) => {
     try {
-        const response = await axios.delete(`${API_BASE_URL}/rooms/remove-user/`, { data });
+        const response = await axios.delete(`${API_BASE_URL}/rooms/remove-user/`, {
+            data,
+            headers: { Email: ownerEmail }
+        });
         return response.data;
     } catch (error: any) {
         throw new Error(error.response?.data?.error || 'Failed to remove user from room');
@@ -67,9 +81,15 @@ export const removeUserFromRoom = async (data: {
 };
 
 // Delete a room
-export const deleteRoom = async (data: { roomId: string }) => {
+export const deleteRoom = async (
+    data: { roomId: string },
+    ownerEmail: string // додайте цей параметр
+) => {
     try {
-        const response = await axios.delete(`${API_BASE_URL}/rooms/delete/`, { data });
+        const response = await axios.delete(`${API_BASE_URL}/rooms/delete/`, {
+            data,
+            headers: { Email: ownerEmail }
+        });
         return response.data;
     } catch (error: any) {
         throw new Error(error.response?.data?.error || 'Failed to delete room');
@@ -90,6 +110,33 @@ export const fetchRoomMembers = async (roomId: string): Promise<RoomMember[]> =>
     } catch (error) {
         console.error('Error fetching room members:', error);
         throw error;
+    }
+};
+
+export const fetchRoomDetails = async (roomId: string, email: string): Promise<RoomDetails> => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/rooms/${roomId}/`, {
+            headers: { Email: email }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.error || 'Failed to fetch room details');
+    }
+};
+
+export const updateRoomAvatar = async (
+    roomId: string,
+    avatar: string,
+    ownerEmail: string
+) => {
+    try {
+        const response = await axios.patch(`${API_BASE_URL}/rooms/${roomId}/avatar/`, 
+            { avatar },
+            { headers: { Email: ownerEmail } }
+        );
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.error || 'Failed to update room avatar');
     }
 };
 

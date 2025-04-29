@@ -12,6 +12,23 @@ from ..utils import get_db_handle
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.ERROR)
 
+def check_room_permission(room, user_email, role='owner'):
+    """
+    Перевіряє, чи є user_email власником (owner) або учасником (member) кімнати.
+    :param room: документ кімнати з БД
+    :param user_email: email користувача
+    :param role: 'owner' або 'member'
+    :return: True/False
+    """
+    if not room or not user_email:
+        return False
+
+    if role == 'owner':
+        return room.get('ownerEmail') == user_email
+    elif role == 'member':
+        return any(m['email'] == user_email for m in room.get('members', []))
+    return False
+
 @api_view(['POST'])
 def create_room(request):
     try:
@@ -22,6 +39,7 @@ def create_room(request):
         name = request.data.get('name')
         is_private = request.data.get('isPrivate', False)
         owner_email = request.headers.get('Email')  # Use email from headers
+        avatar = request.data.get('avatar', '')  # нове поле, можна передавати url або base64
 
         if not name or not owner_email:
             logger.error("Missing required fields: name or ownerEmail")
@@ -31,10 +49,11 @@ def create_room(request):
 
         # Generate invite code
         if is_private:
-            random_suffix = ''.join(random.choices(string.digits, k=3))
+            random_suffix = ''.join(random.choices(string.digits, k=6))  # Increased to 6 digits
             invite_code = f"{name[:5]}-{datetime.now().strftime('%Y%m%d')}-{random_suffix}"
         else:
-            invite_code = None
+            random_suffix = ''.join(random.choices(string.digits, k=3))
+            invite_code = f"{name[:5]}-{datetime.now().strftime('%Y%m%d')}-{random_suffix}"
 
         # Create room document
         room = {
@@ -43,6 +62,7 @@ def create_room(request):
             'isPrivate': is_private,
             'inviteCode': invite_code,
             'createdAt': datetime.now(),
+            'avatar': avatar,  # нове поле
             'members': [{
                 'email': owner_email,
                 'role': 'owner',
@@ -192,12 +212,18 @@ def remove_user_from_room(request):
                 'error': 'Room ID and either user ID or email are required'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check if requester is the owner of the room
+        # Find the room
         room = rooms_collection.find_one({'_id': ObjectId(room_id)})
         if not room:
             return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
-        if room.get('ownerEmail') != requester_email:
+
+        # Check if requester is the owner of the room
+        if not check_room_permission(room, requester_email, role='owner'):
             return Response({'error': 'Only the room owner can remove users'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Заборонити видалення власника кімнати
+        if user_email and user_email == room.get('ownerEmail'):
+            return Response({'error': 'Owner cannot be removed from the room'}, status=status.HTTP_403_FORBIDDEN)
 
         # Build the query to remove the user
         query = {'_id': ObjectId(room_id)}
@@ -225,7 +251,6 @@ def remove_user_from_room(request):
             'error': f'Failed to remove user: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
 @api_view(['DELETE'])
 def delete_room(request):
     try:
@@ -234,11 +259,25 @@ def delete_room(request):
         
         # Get data from request
         room_id = request.data.get('roomId')
+        requester_email = request.headers.get('Email')
 
         if not room_id:
             return Response({
                 'error': 'Room ID is required'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Find the room
+        room = rooms_collection.find_one({'_id': ObjectId(room_id)})
+        if not room:
+            return Response({
+                'error': 'Room not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if requester is the owner
+        if not check_room_permission(room, requester_email, role='owner'):
+            return Response({
+                'error': 'Only the room owner can delete the room'
+            }, status=status.HTTP_403_FORBIDDEN)
 
         # Delete the room
         result = rooms_collection.delete_one({'_id': ObjectId(room_id)})
@@ -298,7 +337,10 @@ def get_room_details(request, room_id):
         db = get_db_handle()
         rooms_collection = db['rooms']
         
-        room = rooms_collection.find_one({'_id': ObjectId(room_id)}, {'_id': 0, 'name': 1, 'createdAt': 1, 'ownerEmail': 1})
+        room = rooms_collection.find_one(
+            {'_id': ObjectId(room_id)},
+            {'_id': 0, 'name': 1, 'createdAt': 1, 'ownerEmail': 1, 'inviteCode': 1, 'isPrivate': 1, 'avatar': 1}  # додано avatar
+        )
         if not room:
             return Response({
                 'error': 'Room not found'
@@ -351,4 +393,22 @@ def get_room_members(request, room_id):
     except Exception as e:
         logger.error(f"Exception in get_room_members: {str(e)}", exc_info=True)
         return Response({'error': f'Failed to fetch members: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['PATCH'])
+def update_room_avatar(request, room_id):
+    try:
+        db = get_db_handle()
+        rooms_collection = db['rooms']
+        avatar = request.data.get('avatar')
+        if not avatar:
+            return Response({'error': 'Avatar is required'}, status=status.HTTP_400_BAD_REQUEST)
+        result = rooms_collection.update_one(
+            {'_id': ObjectId(room_id)},
+            {'$set': {'avatar': avatar}}
+        )
+        if result.modified_count == 0:
+            return Response({'error': 'Failed to update avatar'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'Avatar updated successfully'}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

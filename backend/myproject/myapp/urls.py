@@ -14,8 +14,8 @@ from .views.rooms import (
     delete_room,
     get_user_rooms,
     get_room_details,  
-
     get_room_members,
+    update_room_avatar,
 )
 from .views.room_chat import save_message, get_messages
 
@@ -52,6 +52,7 @@ urlpatterns = [
     path('rooms/', get_user_rooms, name='get_user_rooms'),  # Add the new endpoint
     path('rooms/<str:room_id>/', get_room_details, name='get_room_details'),  # Add the new endpoint
     path('rooms/<str:room_id>/members/', get_room_members, name='get_room_members'),
+    path('rooms/<str:room_id>/avatar/', update_room_avatar, name='update_room_avatar'),
 
     # Room chat
     path('chat/save_massage/', save_message, name='save_message'),
