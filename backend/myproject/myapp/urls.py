@@ -18,6 +18,16 @@ from .views.rooms import (
     update_room_avatar,
 )
 from .views.room_chat import save_message, get_messages
+from .views.room_board import (
+    create_board,
+    delete_board,
+    update_board,
+    get_board,
+    create_widget,
+    delete_widget,
+    update_widget,
+)
+
 
 
 # Add these to your urlpatterns
@@ -61,4 +71,14 @@ urlpatterns = [
 
     # Users
 
+    # ==== BOARD ====
+    path('boards/create/', create_board, name='create_board'),
+    path('boards/delete/', delete_board, name='delete_board'),
+    path('boards/update/', update_board, name='update_board'),
+    path('boards/<str:board_id>/', get_board, name='get_board'),
+
+    # ==== WIDGET ====
+    path('widgets/create/', create_widget, name='create_widget'),
+    path('widgets/delete/', delete_widget, name='delete_widget'),
+    path('widgets/update/', update_widget, name='update_widget'),
 ]

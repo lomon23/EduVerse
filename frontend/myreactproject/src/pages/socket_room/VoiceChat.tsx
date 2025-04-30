@@ -21,7 +21,7 @@ const VoiceChat: React.FC<{ roomId: string }> = ({ roomId }) => {
 
         setConnected(true);
 
-        socketRef.current.on('voice', ({ data, from }) => {
+        socketRef.current.on('voice', ({ data, from }: { data: ArrayBuffer; from: string }) => {
             // Створюємо окремий audio-елемент для кожного користувача
             if (!audioRefs.current[from]) {
                 audioRefs.current[from] = new Audio();
