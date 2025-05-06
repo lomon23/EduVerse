@@ -32,6 +32,7 @@ const App: React.FC = () => {
                     <Route path="/room/:roomId" element={<Layout><Room /></Layout>} />
                     <Route path="/chat" element={<Layout><ChatRoom /></Layout>} />
                     <Route path="/board" element={<Layout><BoardRoom /></Layout>} />
+                    <Route path="/board-room/:id" element={<Layout><BoardRoom /></Layout>} />
                 </Routes>
             </Router>
         </GoogleOAuthProvider>

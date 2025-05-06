@@ -1,33 +1,26 @@
 const express = require('express');
-const cors = require('cors');
 const http = require('http');
+const cors = require('cors');
 const { Server } = require('socket.io');
-const setupChatHandlers = require('./chat');
-require('dotenv').config();
+const handleBoardSockets = require('./sockets/board');
 
 const app = express();
+app.use(cors());
+
 const server = http.createServer(app);
+
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  transports: ['websocket']
 });
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+handleBoardSockets(io);
 
-// Basic test route
-app.get('/', (req, res) => {
-    res.json({ message: 'Express server is running' });
-});
-
-// Setup chat socket handlers
-setupChatHandlers(io);
-
-// Start server
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 server.listen(PORT, () => {
-    console.log(`Server on Express running on ${PORT} port`);
+  console.log(`Server running on port ${PORT}`);
 });

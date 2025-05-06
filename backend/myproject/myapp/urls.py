@@ -22,7 +22,9 @@ from .views.room_board import (
     create_board,
     delete_board,
     update_board,
-    get_board,
+    get_board_info,
+    get_room_boards,    # додати імпорт
+    get_all_boards,     # додати імпорт якщо треба
     create_widget,
     delete_widget,
     update_widget,
@@ -72,10 +74,12 @@ urlpatterns = [
     # Users
 
     # ==== BOARD ====
-    path('boards/create/', create_board, name='create_board'),
-    path('boards/delete/', delete_board, name='delete_board'),
-    path('boards/update/', update_board, name='update_board'),
-    path('boards/<str:board_id>/', get_board, name='get_board'),
+    path('boards/all/', get_all_boards),  # змінили шлях і перемістили вгору
+    path('boards/create/', create_board),
+    path('boards/delete/', delete_board),
+    path('boards/update/', update_board),
+    path('room_boards/<str:room_id>/', get_room_boards),
+    path('boards/<str:board_id>/', get_board_info),  # перемістили вниз
 
     # ==== WIDGET ====
     path('widgets/create/', create_widget, name='create_widget'),

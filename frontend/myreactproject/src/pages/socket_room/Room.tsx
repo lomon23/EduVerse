@@ -8,6 +8,7 @@ import { fetchRoomMembers, removeUserFromRoom, RoomMember, deleteRoom, updateRoo
 import DeleteIcon from '@mui/icons-material/Delete';
 import Button from '@mui/material/Button';
 import VoiceChat from './VoiceChat';
+import BoardList from './BoardList';
 
 const Room: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
@@ -137,6 +138,7 @@ const Room: React.FC = () => {
 
     return (
         <Container maxWidth="lg" sx={{ mt: 4 }}>
+            
             <Grid container spacing={3}>
                 <Grid item xs={12}>
                     <Paper elevation={3} sx={{ p: 2 }}>
@@ -243,9 +245,7 @@ const Room: React.FC = () => {
                         )}
                         {activeTab === 1 && <ChatRoom roomId={roomId!} />}
                         {activeTab === 2 && (
-                            <Typography variant="body1">
-                                Це вкладка дошки. Тут буде реалізовано функціонал дошки.
-                            </Typography>
+                            <BoardList roomId={roomId!} />
                         )}
                         {activeTab === 3 && <VoiceChat roomId={roomId!} />}
                     </Paper>

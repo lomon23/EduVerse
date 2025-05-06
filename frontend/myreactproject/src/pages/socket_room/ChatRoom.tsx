@@ -8,6 +8,8 @@ interface Message {
   timestamp: string;
 }
 
+let newSocket : Socket | null = null; // Declare newSocket outside of the component
+
 const ChatRoom: React.FC<{ roomId: string }> = ({ roomId }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [message, setMessage] = useState('');
@@ -29,19 +31,18 @@ const ChatRoom: React.FC<{ roomId: string }> = ({ roomId }) => {
           timestamp: new Date(msg.timestamp).toLocaleTimeString('en-GB')
         }));
         setMessages(formattedMessages);
-
-        const newSocket = io('http://localhost:5000');
-        setSocket(newSocket);
-
-        newSocket.emit('joinRoom', `${details.firstName} ${details.lastName}`, roomId);
-
-        newSocket.on('message', (msg: Message) => {
-          setMessages(prev => [...prev, msg]);
-        });
-
+        console.log('Loaded messages:', formattedMessages);
+          if (!newSocket) {
+              newSocket = io('http://localhost:5000');
+              setSocket(newSocket);
+              newSocket.emit('joinRoom', `${details.firstName} ${details.lastName}`, roomId);
+              newSocket.on('message', (msg: Message) => {
+                  setMessages(prev => [...prev, msg]);
+              });
+          }
         return () => {
-          newSocket.off('message');
-          newSocket.disconnect();
+          newSocket?.off('message');
+          newSocket?.disconnect();
         };
       } catch (error) {
         console.error('Failed to initialize chat:', error);
@@ -49,12 +50,12 @@ const ChatRoom: React.FC<{ roomId: string }> = ({ roomId }) => {
     };
 
     initializeChat();
-  }, [roomId]);
+  }, []);
 
   const sendMessage = async () => {
     if (message && socket && accountDetails) {
       const timestamp = new Date().toLocaleTimeString('en-GB');
-      
+
       try {
         // Save message to database
         await saveMessage({
@@ -82,11 +83,11 @@ const ChatRoom: React.FC<{ roomId: string }> = ({ roomId }) => {
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <div style={{ 
-        border: '1px solid #ccc', 
-        padding: '10px', 
-        height: '300px', 
-        overflowY: 'scroll', 
+      <div style={{
+        border: '1px solid #ccc',
+        padding: '10px',
+        height: '300px',
+        overflowY: 'scroll',
         marginBottom: '10px',
         backgroundColor: '#f5f5f5'
       }}>
@@ -102,7 +103,7 @@ const ChatRoom: React.FC<{ roomId: string }> = ({ roomId }) => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
-          style={{ 
+          style={{
             flex: 1,
             padding: '10px',
             borderRadius: '4px',
@@ -110,7 +111,7 @@ const ChatRoom: React.FC<{ roomId: string }> = ({ roomId }) => {
           }}
           placeholder="Type your message..."
         />
-        <button 
+        <button
           onClick={sendMessage}
           style={{
             padding: '10px 20px',

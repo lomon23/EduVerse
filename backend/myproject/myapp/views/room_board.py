@@ -21,7 +21,7 @@ def create_board(request):
             'room_id': room_id,
             'avatar': avatar,
             'widgets': [],
-            'createdAt': datetime.now()
+            'createdAt': datetime.now(),   
         }
         result = boards_collection.insert_one(board)
         board['_id'] = str(result.inserted_id)
@@ -69,19 +69,50 @@ def update_board(request):
         return Response({'error': f'Failed to update board: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-def get_board(request, board_id):
+def get_board_info(request, board_id):
     try:
         db = get_db_handle()
         boards_collection = db['boards']
         board = boards_collection.find_one({'_id': ObjectId(board_id)})
         if not board:
             return Response({'error': 'Board not found'}, status=status.HTTP_404_NOT_FOUND)
-        board['_id'] = str(board['_id'])
-        widgets_count = len(board.get('widgets', []))
-        board['widgetsCount'] = widgets_count
-        return Response(board, status=status.HTTP_200_OK)
+        info = {
+            '_id': str(board['_id']),
+            'name': board.get('name', ''),
+            'widgetsCount': len(board.get('widgets', [])),
+            'createdAt': board.get('createdAt')
+        }
+        # Якщо createdAt це datetime, перетворити у строку
+        if hasattr(info['createdAt'], 'isoformat'):
+            info['createdAt'] = info['createdAt'].isoformat()
+        return Response(info, status=status.HTTP_200_OK)
     except Exception as e:
-        return Response({'error': f'Failed to get board: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'error': f'Failed to get board info: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_room_boards(request, room_id):
+    try:
+        db = get_db_handle()
+        boards_collection = db['boards']
+        boards = list(boards_collection.find({'room_id': room_id}))
+        for board in boards:
+            board['_id'] = str(board['_id'])
+        return Response(boards, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': f'Failed to get boards: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_all_boards(request):
+    try:
+        db = get_db_handle()
+        boards_collection = db['boards']
+        boards = list(boards_collection.find())
+        for board in boards:
+            board['_id'] = str(board['_id'])
+        return Response(boards, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': f'Failed to get all boards: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 # ======================= WIDGET ENDPOINTS =======================
 @api_view(['POST'])
