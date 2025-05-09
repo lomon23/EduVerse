@@ -1,5 +1,6 @@
 import random
 import string
+from enum import Enum
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -8,6 +9,12 @@ from ..utils import get_db_handle
 from bson import ObjectId
 from datetime import datetime  # Add this import
 import math  # Add this import
+
+
+class CourseVisibility(Enum):
+    PUBLIC = "public"
+    PRIVATE = "private"
+    PERSONAL = "personal"
 
 
 def generate_course_code(length=8):
@@ -25,11 +32,17 @@ def create_course(request):
         name = request.data.get('name')
         description = request.data.get('description')
         xp_reward = request.data.get('xp_reward', 0)
+        visibility = request.data.get('visibility', CourseVisibility.PERSONAL.value)
         author_email = request.headers.get('Email')
 
         if not name or not author_email:
             return Response({
                 'error': 'Name and email are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if visibility not in [v.value for v in CourseVisibility]:
+            return Response({
+                'error': f'Invalid visibility type. Must be one of: {[v.value for v in CourseVisibility]}'
             }, status=status.HTTP_400_BAD_REQUEST)
 
         # Create course document
@@ -38,6 +51,7 @@ def create_course(request):
             'description': description or '',
             'author_email': author_email,
             'xp_reward': int(xp_reward),
+            'visibility': visibility,
             'created_at': datetime.now(),
             'items': []
         }

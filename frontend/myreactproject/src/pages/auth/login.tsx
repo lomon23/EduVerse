@@ -41,7 +41,7 @@ const GoogleLogin: React.FC = () => {
                 if (res.data.message) {
                     setMessage(`Успішний логін через Google!`);
                     localStorage.setItem("userEmail", res.data.email); // зберігаємо email у localStorage
-                    navigate('/');
+                    navigate('/main');
                 }
             } catch (error: any) {
                 console.error('Google login error:', error);
@@ -61,7 +61,7 @@ const GoogleLogin: React.FC = () => {
             const data = await loginUser(email, password);
             console.log('User logged in:', data);
             localStorage.setItem("userEmail", email); // зберігаємо email у localStorage
-            navigate('/');
+            navigate('/main');
         } catch (error) {
             setMessage("Помилка логіну");
         }

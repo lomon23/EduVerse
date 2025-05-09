@@ -1,6 +1,17 @@
 const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
-export const createCourse = async (name: string, description: string, xpReward: number) => {
+export enum CourseVisibility {
+    PUBLIC = "public",
+    PRIVATE = "private",
+    PERSONAL = "personal"
+}
+
+export const createCourse = async (
+    name: string, 
+    description: string, 
+    xpReward: number,
+    visibility: CourseVisibility = CourseVisibility.PERSONAL
+) => {
     try {
         const email = localStorage.getItem('userEmail');
         if (!email) {
@@ -16,7 +27,8 @@ export const createCourse = async (name: string, description: string, xpReward: 
             body: JSON.stringify({
                 name,
                 description,
-                xp_reward: xpReward
+                xp_reward: xpReward,
+                visibility
             })
         });
 
@@ -30,7 +42,6 @@ export const createCourse = async (name: string, description: string, xpReward: 
         throw error;
     }
 };
-
 
 export const fetchCourseById = async (courseId: string) => {
     try {
@@ -72,7 +83,6 @@ export const fetchCourseItems = async (courseId: string) => {
         throw error;
     }
 };
-
 
 export const createCourseItem = async (data: {
     course_id: string;
@@ -202,10 +212,6 @@ export const completeCourse = async (courseId: string, completionPercentage: str
     }
 };
 
-
-
-
-
 export interface CourseDetails {
     id: string;
     name: string;
@@ -219,4 +225,5 @@ export interface CourseDetails {
         type: string;
         completion_date?: string;
     }>;
+    visibility: CourseVisibility;
 }

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import Header from "./Header";
-
 import Sidebar from "./sideBar";
 import CourseList from "../../components/course/CourseList"; // Update path
+import WeeklyTasks from "./weeklyTask"; // Add this import
 import { fetchCourses } from "../../services/course/courseService"; // Update path
+import HeroSection from "./heroSection"; // Update path
 import "./stylesMP/mainPage.css";
 
 interface Course {
@@ -72,13 +73,12 @@ const MainPage: React.FC<MainPageProps> = ({ activePage: initialActivePage = "ho
                         )
                     ) : (
                         <div className="welcome-content">
-                            <h2>Ласкаво просимо</h2>
-                            <p>Оберіть розділ у меню зліва</p>
+                            <HeroSection />
+                            <WeeklyTasks />
                         </div>
                     )}
                 </main>
             </div>
-
         </div>
     );
 };

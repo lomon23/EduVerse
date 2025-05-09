@@ -6,6 +6,8 @@ import VideoIcon from '@mui/icons-material/Videocam';
 import { useParams, useLocation } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import TextAreaWidget from './Widget/TextArea_widget';
+import VideoWidget from './Widget/VideoWidget';
+import VideoUrlDialog from './Components/VideoUrlDialog';
 
 interface Widget {
   id: string;
@@ -20,21 +22,6 @@ interface Widget {
   height: number;
 }
 
-interface TextAreaWidgetProps {
-  id: string;
-  x: number;
-  y: number;
-  color: string;
-  text: string;
-  isDragging: boolean;
-  width: number;
-  height: number;
-  onMouseDown: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
-  onTextChange: (text: string) => void;
-  onDelete: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
-  onResize: (width: number, height: number) => void;
-}
-
 const BoardRoom: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
@@ -46,6 +33,7 @@ const BoardRoom: React.FC = () => {
   const [draggedWidget, setDraggedWidget] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [openColorModal, setOpenColorModal] = useState(false);
+  const [showVideoWidget, setShowVideoWidget] = useState(false);
 
   const handleOpenColorModal = () => setOpenColorModal(true);
   const handleCloseColorModal = () => setOpenColorModal(false);
@@ -64,24 +52,50 @@ const BoardRoom: React.FC = () => {
       return;
     }
 
-    console.log('Connecting to board:', boardId);
-
     try {
       const socket = io('http://localhost:5000', {
-        transports: ['websocket'],
+        withCredentials: true,
+        transports: ['websocket', 'polling'],
+        upgrade: true,
+        rememberUpgrade: true,
+        secure: false,
+        rejectUnauthorized: false,
         reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000
+        reconnectionAttempts: 10,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 20000,
+        autoConnect: true,
+        path: '/socket.io/'
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('Connection error:', error);
+        setConnectionStatus(`Помилка підключення: ${error.message}`);
+      });
+
+      socket.on('connect_timeout', () => {
+        console.error('Connection timeout');
+        setConnectionStatus('Timeout підключення');
+      });
+
+      socket.on('reconnect_attempt', (attemptNumber) => {
+        console.log(`Спроба перепідключення #${attemptNumber}`);
+      });
+
+      socket.on('reconnect_failed', () => {
+        console.error('Reconnection failed');
+        setConnectionStatus('Помилка перепідключення');
+      });
+
+      socket.on('connect', () => {
+        console.log('Successfully connected to server');
+        setIsConnected(true);
+        setConnectionStatus('Підключено');
+        socket.emit('joinBoard', boardId);
       });
 
       socketRef.current = socket;
-
-      socket.on('connect', () => {
-        console.log('Socket connected, joining board:', boardId);
-        socket.emit('joinBoard', boardId);
-        setIsConnected(true);
-        setConnectionStatus('Підключено');
-      });
 
       socket.on('initialWidgets', (initialWidgets: Widget[]) => {
         console.log('Received initial widgets:', initialWidgets);
@@ -126,24 +140,18 @@ const BoardRoom: React.FC = () => {
         setConnectionStatus('Відключено від сервера');
       });
 
-      socket.on('connect_error', (error) => {
-        console.error('Connection error:', error);
-        setIsConnected(false);
-        setConnectionStatus(`Помилка підключення: ${error.message}`);
-      });
-
       return () => {
-        console.log('Cleaning up socket connection');
-        socket.disconnect();
-        socketRef.current = undefined;
+        if (socket) {
+          socket.disconnect();
+        }
       };
     } catch (error) {
-      console.error('Socket connection error:', error);
-      setConnectionStatus('Помилка підключення до сервера');
+      console.error('Socket initialization error:', error);
+      setConnectionStatus('Помилка ініціалізації сокета');
     }
   }, [boardId, id]);
 
-  const handleCreateWidget = (type: 'box' | 'textarea' | 'video', color: string) => {
+  const handleCreateWidget = (type: 'box' | 'textarea' | 'video', color: string, url?: string) => {
     if (!socketRef.current || !boardId || !isConnected) return;
 
     const newWidget: Widget = {
@@ -153,7 +161,7 @@ const BoardRoom: React.FC = () => {
       color: color,
       type: type,
       text: type === 'textarea' ? 'Новий текст' : undefined,
-      videoUrl: type === 'video' ? '' : undefined,
+      videoUrl: type === 'video' ? url : undefined,
       width: type === 'textarea' ? 200 : type === 'video' ? 320 : 100,
       height: type === 'textarea' ? 150 : type === 'video' ? 240 : 100
     };
@@ -219,6 +227,11 @@ const BoardRoom: React.FC = () => {
     socketRef.current.emit('resizeWidget', boardId, widgetId, { width, height });
   };
 
+  const handleVideoUrlSubmit = (url: string) => {
+    handleCreateWidget('video', '#ffffff', url);
+    setShowVideoWidget(false);
+  };
+
   if (!boardId || boardId === 'undefined') {
     return (
       <Box sx={{ p: 2 }}>
@@ -262,13 +275,13 @@ const BoardRoom: React.FC = () => {
                 handleCloseColorModal();
               }}
               startIcon={<TextSnippetIcon />}
-            >
+              >
               Текстовий віджет
             </Button>
             <Button 
               variant="outlined"
               onClick={() => {
-                handleCreateWidget('video', '#ffffff');
+                setShowVideoWidget(true);
                 handleCloseColorModal();
               }}
               startIcon={<VideoIcon />}
@@ -303,6 +316,12 @@ const BoardRoom: React.FC = () => {
         </DialogActions>
       </Dialog>
 
+      <VideoUrlDialog 
+        open={showVideoWidget}
+        onClose={() => setShowVideoWidget(false)}
+        onSubmit={handleVideoUrlSubmit}
+      />
+
       <Box 
         sx={{ 
           position: 'relative', 
@@ -312,66 +331,83 @@ const BoardRoom: React.FC = () => {
           backgroundColor: '#fff'
         }}
       >
-        {widgets.map(widget => (
-          widget.type === 'textarea' ? (
-            <TextAreaWidget
-              key={widget.id}
-              id={widget.id}
-              x={widget.x}
-              y={widget.y}
-              color={widget.color}
-              text={widget.text || ''}
-              isDragging={draggedWidget === widget.id}
-              width={widget.width}
-              height={widget.height}
-              onMouseDown={(e) => handleMouseDown(e, widget)}
-              onTextChange={(text) => handleTextChange(widget.id, text)}
-              onDelete={(e: React.MouseEvent<HTMLButtonElement>) => handleDeleteWidget(e, widget.id)}
-              onResize={(width, height) => handleResize(widget.id, width, height)}
-            />
-          ) : (
-            <Box
-              key={widget.id}
-              onMouseDown={(e) => handleMouseDown(e, widget)}
-              sx={{
-                position: 'absolute',
-                left: `${widget.x}px`,
-                top: `${widget.y}px`,
-                width: `${widget.width}px`,
-                height: `${widget.height}px`,
-                backgroundColor: widget.color,
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                cursor: 'move',
-                userSelect: 'none',
-                zIndex: 1000,
-                opacity: draggedWidget === widget.id ? 0.8 : 1,
-                '&:hover': {
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.15)'
-                }
-              }}
-            >
-              <IconButton
-                size="small"
-                onClick={(e) => handleDeleteWidget(e, widget.id)}
+        {widgets.map(widget => {
+          if (widget.type === 'textarea') {
+            return (
+              <TextAreaWidget
+                key={widget.id}
+                id={widget.id}
+                x={widget.x}
+                y={widget.y}
+                color={widget.color}
+                text={widget.text || ''}
+                isDragging={draggedWidget === widget.id}
+                width={widget.width}
+                height={widget.height}
+                onMouseDown={(e) => handleMouseDown(e, widget)}
+                onTextChange={(text) => handleTextChange(widget.id, text)}
+                onDelete={(e: React.MouseEvent<HTMLButtonElement>) => handleDeleteWidget(e, widget.id)}
+                onResize={(width, height) => handleResize(widget.id, width, height)}
+              />
+            );
+          } else if (widget.type === 'video') {
+            return (
+              <VideoWidget
+                key={widget.id}
+                id={widget.id}
+                x={widget.x}
+                y={widget.y}
+                videoUrl={widget.videoUrl || ''}
+                onDelete={(e) => handleDeleteWidget(e, widget.id)}
+                onMouseDown={(e) => handleMouseDown(e, widget)}
+                socket={socketRef.current}
+              />
+            );
+          } else {
+            return (
+              <Box
+                key={widget.id}
+                onMouseDown={(e) => handleMouseDown(e, widget)}
                 sx={{
                   position: 'absolute',
-                  top: -10,
-                  right: -10,
-                  backgroundColor: 'white',
+                  left: `${widget.x}px`,
+                  top: `${widget.y}px`,
+                  width: `${widget.width}px`,
+                  height: `${widget.height}px`,
+                  backgroundColor: widget.color,
                   border: '1px solid #ddd',
-                  padding: '2px',
+                  borderRadius: '4px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  cursor: 'move',
+                  userSelect: 'none',
+                  zIndex: 1000,
+                  opacity: draggedWidget === widget.id ? 0.8 : 1,
                   '&:hover': {
-                    backgroundColor: '#f5f5f5'
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.15)'
                   }
                 }}
               >
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </Box>
-          )
-        ))}
+                <IconButton
+                  size="small"
+                  onClick={(e) => handleDeleteWidget(e, widget.id)}
+                  sx={{
+                    position: 'absolute',
+                    top: -10,
+                    right: -10,
+                    backgroundColor: 'white',
+                    border: '1px solid #ddd',
+                    padding: '2px',
+                    '&:hover': {
+                      backgroundColor: '#f5f5f5'
+                    }
+                  }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            );
+          }
+        })}
       </Box>
       <Typography variant="caption" sx={{ mt: 1 }}>
         Кількість віджетів: {widgets.length}

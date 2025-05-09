@@ -70,6 +70,50 @@ const handleBoardSockets = (io) => {
       }
     });
 
+    socket.on('videoStateChange', (boardId, widgetId, state) => {
+      const room = `board-${boardId}`;
+      socket.to(room).emit('videoStateUpdated', { widgetId, ...state });
+    });
+
+    /**
+     * @typedef {Object} VideoActionPayload
+     * @property {string} boardId
+     * @property {string} widgetId
+     * @property {{ type: 'play' | 'pause', timestamp: number, currentTime: number }} action
+     */
+
+    /**
+     * @param {VideoActionPayload} payload
+     */
+    socket.on('videoAction', (payload) => {
+      if (!payload || !payload.action) {
+        console.error('Invalid videoAction payload:', payload);
+        return;
+      }
+
+      const { boardId, widgetId, action } = payload;
+      const room = `board-${boardId}`;
+      const actionType = action.type === 'play' ? 'started playing' : 'paused';
+      
+      console.log(`Video ${widgetId} in room ${room} ${actionType} at ${action.currentTime}s`);
+      socket.to(room).emit('videoActionReceived', { widgetId, action });
+    });
+
+    socket.on('videoSync', (payload) => {
+      if (!payload || !payload.currentTime) {
+        console.error('Invalid videoSync payload:', payload);
+        return;
+      }
+
+      const { boardId, widgetId, currentTime } = payload;
+      const room = `board-${boardId}`;
+      
+      socket.to(room).emit('videoSync', { 
+        widgetId, 
+        currentTime 
+      });
+    });
+
     socket.on('disconnect', () => {
       console.log('User disconnected:', socket.id);
     });

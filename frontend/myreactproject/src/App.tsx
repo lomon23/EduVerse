@@ -12,6 +12,8 @@ import CreateRoom from "./pages/socket_room/CreateRoom";
 import Room from './pages/socket_room/Room';
 import ChatRoom from './pages/socket_room/ChatRoom';
 import BoardRoom from './pages/socket_room/BoardRoom';
+import HomeLayout from './pages/home/HomeLayout';
+import HomePage from './pages/home/HomePage';
 
 const App: React.FC = () => {
     return (
@@ -20,7 +22,11 @@ const App: React.FC = () => {
         >
             <Router>
                 <Routes>
-                    <Route path="/" element={<Layout><MainPage /></Layout>} />
+                    {/* Homepage with different layout */}
+                    <Route path="/" element={<HomeLayout><HomePage /></HomeLayout>} />
+                    
+                    {/* Main routes with original layout */}
+                    <Route path="/main" element={<Layout><MainPage /></Layout>} />
                     <Route path="/register" element={<Layout><GoogleRegister /></Layout>} />
                     <Route path="/login" element={<Layout><GoogleLogin /></Layout>} />
                     <Route path="/account" element={<Layout><Account /></Layout>} />
@@ -33,6 +39,7 @@ const App: React.FC = () => {
                     <Route path="/chat" element={<Layout><ChatRoom /></Layout>} />
                     <Route path="/board" element={<Layout><BoardRoom /></Layout>} />
                     <Route path="/board-room/:id" element={<Layout><BoardRoom /></Layout>} />
+                    <Route path="/weekly-tasks" element={<Layout><MainPage activePage="weekly-tasks" /></Layout>} />
                 </Routes>
             </Router>
         </GoogleOAuthProvider>

@@ -29,7 +29,12 @@ from .views.room_board import (
     delete_widget,
     update_widget,
 )
-
+from .views.weekleTask import (
+    create_weekly_task, 
+    get_weekly_tasks,
+    update_task_progress,
+    # get_task_by_type
+)
 
 
 # Add these to your urlpatterns
@@ -85,4 +90,10 @@ urlpatterns = [
     path('widgets/create/', create_widget, name='create_widget'),
     path('widgets/delete/', delete_widget, name='delete_widget'),
     path('widgets/update/', update_widget, name='update_widget'),
+
+    # Weekly Tasks
+    path('weekly-tasks/create/', create_weekly_task, name='create_weekly_task'),
+    path('weekly-tasks/', get_weekly_tasks, name='get_weekly_tasks'),
+    # path('weekly-tasks/type/<str:task_type>/', get_task_by_type, name='get_task_by_type'),
+    path('weekly-tasks/<str:task_id>/progress/', update_task_progress, name='update_task_progress'),
 ]
