@@ -26,14 +26,6 @@ Here is a summary of the technologies used:
 | Websockets  | Express           |
 | Authentication | JWT            |
 
-## Usage Examples
-Below are examples of how the project looks in action. You can add screenshots or GIFs here:  
-
-![EduVerse Home Page](Downloads/Telegram\Desktop/)  
-![Interactive Board](Downloads/lnu_photo.jpg)  
-
-*(Create a `screenshots` folder in your repo and add images with these names.)*
-
 ## Future Plans
 - Add more interactive lessons and exercises
 - Implement a reward system with badges and achievements
@@ -44,3 +36,4 @@ Below are examples of how the project looks in action. You can add screenshots o
 For questions or collaboration, contact **Ostap** at ostapkrochak22@gmail.com.  
 GitHub: [https://github.com/ostapkrochak](https://github.com/ostapkrochak)  
 LinkedIn: [https://www.linkedin.com/in/ostap-krochak-135496327/](https://www.linkedin.com/in/ostap-krochak-135496327/)
+
